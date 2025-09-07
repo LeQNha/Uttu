@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Uttu</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string-array name="sort_options">
+        <item>A-Z</item>
+        <item>Time</item>
+    </string-array>
+</resources>
