@@ -7,7 +7,6 @@ import kotlinx.parcelize.Parcelize
 data class Project(
     val projectId: String,
     var projectName: String,
-    var projectDescription: String,
     var projectStatus: String
 
 ) : Parcelable

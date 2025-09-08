@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Uttu">
         <activity
+            android:name=".ui.activities.SeeAllMembersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.SeeAllTasksActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.TaskDetailsActivity"
             android:exported="false" />
         <activity

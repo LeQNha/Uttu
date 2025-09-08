@@ -1,7 +1,9 @@
 package com.example.uttu.ui.activities
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -9,42 +11,46 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.uttu.R
 import com.example.uttu.adapters.TaskAdapter
-import com.example.uttu.databinding.ActivityProjectDetailsBinding
-import com.example.uttu.models.Project
+import com.example.uttu.databinding.ActivitySeeAllTasksBinding
 import com.example.uttu.models.Task
 import java.util.Date
 
-class ProjectDetailsActivity : AppCompatActivity() {
+class SeeAllTasksActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityProjectDetailsBinding
+    private lateinit var binding : ActivitySeeAllTasksBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        enableEdgeToEdge()
-//        setContentView(R.layout.activity_project_details)
-        binding = ActivityProjectDetailsBinding.inflate(layoutInflater)
+//        setContentView(R.layout.activity_see_all_tasks)
+        binding = ActivitySeeAllTasksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+//            insets
+//        }
 
-        val project = intent.getParcelableExtra<Project>("project")
-
-        project?.let {
-            binding.projectName.text = it.projectName
-        }
-
+        dropdownSetUp()
         taskRvSetUp()
-        onClickLisenerSetUp()
-
+        setupTabs()
     }
 
-    private fun onClickLisenerSetUp(){
-        binding.btnSeeAllTasks.setOnClickListener {
-            val intent = Intent(this, SeeAllTasksActivity::class.java)
-            startActivity(intent)
-        }
-
-        binding.btnSeeAllMembers.setOnClickListener {
-            val intent = Intent(this, SeeAllMembersActivity::class.java)
-            startActivity(intent)
+    private fun dropdownSetUp(){
+        // Lấy dữ liệu sort từ strings.xml
+        val sortOptions = resources.getStringArray(R.array.sort_options_2)
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_list_item_1,
+            sortOptions
+        )
+        // Gắn adapter vào AutoCompleteTextView
+        binding.sortDropdown.setAdapter(adapter)
+        // Xử lý sự kiện chọn
+        binding.sortDropdown.setOnItemClickListener { parent, _, position, _ ->
+            val selected = parent.getItemAtPosition(position).toString()
+            // Ví dụ: log hoặc xử lý sort theo lựa chọn
+            println("Selected sort: $selected")
         }
     }
 
@@ -90,5 +96,26 @@ class ProjectDetailsActivity : AppCompatActivity() {
         }
         binding.taskRecyclerView.adapter = adapter
         binding.taskRecyclerView.layoutManager = LinearLayoutManager(this)
+    }
+
+    private fun setupTabs(){
+        val tabs = listOf(binding.tabAll, binding.tabCompleted, binding.tabIncomplete)
+
+        tabs.forEach { tab ->
+            tab.setOnClickListener {
+                tabs.forEach { t ->
+                    t.setBackgroundResource(R.drawable.bg_tab_unselected)
+                    t.setTextColor(Color.BLACK)
+                }
+                tab.setBackgroundResource(R.drawable.bg_tab_selected)
+                tab.setTextColor(Color.BLUE)
+
+                when (tab.id) {
+                    R.id.tabAll -> { /* show all todos */ }
+                    R.id.tabCompleted -> { /* filter completed */ }
+                    R.id.tabIncomplete -> { /* filter incomplete */ }
+                }
+            }
+        }
     }
 }

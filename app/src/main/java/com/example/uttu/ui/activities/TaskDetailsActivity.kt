@@ -1,8 +1,11 @@
 package com.example.uttu.ui.activities
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -11,6 +14,7 @@ import com.example.uttu.adapters.TodoAdapter
 import com.example.uttu.models.Task
 import com.example.uttu.databinding.ActivityTaskDetailsBinding
 import com.example.uttu.models.Todo
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Date
 
 class TaskDetailsActivity : AppCompatActivity() {
@@ -32,6 +36,38 @@ class TaskDetailsActivity : AppCompatActivity() {
         }
 
         todoRvSetUp()
+        onClickListenerSetUp()
+    }
+
+    private fun onClickListenerSetUp(){
+        binding.btnSeeAllMembers.setOnClickListener {
+            val intent = Intent(this, SeeAllMembersActivity::class.java)
+            startActivity(intent)
+        }
+        binding.btnProgress.setOnClickListener {
+            val dialog = BottomSheetDialog(this)
+            val view = layoutInflater.inflate(R.layout.dialog_task_status, null)
+            dialog.setContentView(view)
+
+            val btnAssigned = view.findViewById<LinearLayout>(R.id.btnAssigned)
+            val btnInProgress = view.findViewById<LinearLayout>(R.id.btnInProgress)
+            val btnCompleted = view.findViewById<LinearLayout>(R.id.btnCompleted)
+
+            val buttons = listOf(btnAssigned, btnInProgress, btnCompleted)
+
+            fun selectButton(selected: LinearLayout, status: String){
+                buttons.forEach { it.background = ContextCompat.getDrawable(this, R.drawable.bg_status_unselected) }
+                selected.background = ContextCompat.getDrawable(this, R.drawable.bg_status_selected)
+                binding.tvStatusTag.text = status
+                dialog.dismiss()
+            }
+
+            btnAssigned.setOnClickListener { selectButton(btnAssigned, "Assigned") }
+            btnInProgress.setOnClickListener { selectButton(btnInProgress, "In Progress") }
+            btnCompleted.setOnClickListener { selectButton(btnCompleted, "Completed") }
+
+            dialog.show()
+        }
     }
 
     private fun todoRvSetUp(){
