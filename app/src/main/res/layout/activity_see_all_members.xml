@@ -109,7 +109,7 @@
             android:id="@+id/fabAddNewMember"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_plus"
+            android:src="@drawable/outline_add_24"
             app:tint="@android:color/white"
             app:backgroundTint="?attr/colorPrimary"
             app:layout_constraintBottom_toBottomOf="parent"

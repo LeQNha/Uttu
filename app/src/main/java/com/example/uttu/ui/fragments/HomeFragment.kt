@@ -18,6 +18,7 @@ import com.example.uttu.databinding.FragmentHomeBinding
 import com.example.uttu.models.Project
 import com.example.uttu.ui.activities.ProjectDetailsActivity
 import com.google.android.material.textfield.TextInputEditText
+import java.util.Date
 
 class HomeFragment : Fragment() {
 
@@ -95,11 +96,14 @@ class HomeFragment : Fragment() {
 
     private fun projectRvSetUp(){
         val projectList = listOf(
-            Project(projectId = "1", projectName = "Project 1", projectStatus = "Working"),
-            Project(projectId = "2", projectName = "Project 2", projectStatus = "Working"),
-            Project(projectId = "3", projectName = "Project 3", projectStatus = "Working"),
-            Project(projectId = "4", projectName = "Project 4", projectStatus = "Working"),
-            Project(projectId = "5", projectName = "Project 5", projectStatus = "Working"),
+            Project(projectId = "1", projectName = "Project 1", projectStatus = "Working",  createdAt = Date(
+                System.currentTimeMillis() - 5 * 60 * 60 * 1000
+            )
+            ),
+            Project(projectId = "2", projectName = "Project 2", projectStatus = "Working", createdAt = Date(System.currentTimeMillis() - 10 * 60 * 60 * 1000)),
+            Project(projectId = "3", projectName = "Project 3", projectStatus = "Working", createdAt = Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000)),
+            Project(projectId = "4", projectName = "Project 4", projectStatus = "Working", createdAt = Date(System.currentTimeMillis() - 2 * 24 * 60 * 60 * 1000)),
+            Project(projectId = "5", projectName = "Project 5", projectStatus = "Working", createdAt = Date(System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000)),
         )
 
         val adapter = ProjectAdapter(projectList){ project ->

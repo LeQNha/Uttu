@@ -8,6 +8,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.example.uttu.databinding.ActivityMainBinding
 import com.example.uttu.ui.fragments.AccountFragment
+import com.example.uttu.ui.fragments.FriendFragment
 import com.example.uttu.ui.fragments.HomeFragment
 
 class MainActivity : AppCompatActivity() {
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity() {
             when(it.itemId){
                 R.id.homeNav -> replaceFragment(HomeFragment())
                 R.id.accountNav -> replaceFragment(AccountFragment())
+                R.id.friendNav -> replaceFragment(FriendFragment())
                 else -> {
 
                 }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Bo góc -->
+    <corners android:radius="20dp" />
+
+    <!-- Màu nền -->
+    <solid android:color="@color/main_purple" />
+
+    <!-- Viền (optional, có thể bỏ nếu không cần) -->
+    <stroke
+        android:width="1dp"
+        android:color="@color/main_purple" />
+
+    <!-- Padding -->
+    <padding
+        android:left="8dp"
+        android:top="4dp"
+        android:right="8dp"
+        android:bottom="4dp" />
+
+</shape>

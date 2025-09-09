@@ -56,6 +56,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 taskDescription = "Create wireframe and UI design for homepage",
                 taskStatus = "Assigned",
                 taskDue = Date(System.currentTimeMillis() + 2 * 60 * 60 * 1000), // 2 giờ sau
+                createdAt = Date(System.currentTimeMillis() - 1 * 60 * 60 * 1000),
                 projectId = "P1"
             ),
             Task(
@@ -64,6 +65,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 taskDescription = "Implement login and register endpoints",
                 taskStatus = "Open",
                 taskDue = Date(System.currentTimeMillis() + 8 * 60 * 60 * 1000), // 8 giờ sau
+                createdAt = Date(System.currentTimeMillis() - 2 * 60 * 60 * 1000), // tạo 2 giờ trước
                 projectId = "P1"
             ),
             Task(
@@ -72,6 +74,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 taskDescription = "Setup PostgreSQL with initial schema",
                 taskStatus = "In Progress",
                 taskDue = Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000), // 1 ngày sau
+                createdAt = Date(System.currentTimeMillis() - 5 * 60 * 60 * 1000), // tạo 5 giờ trước
                 projectId = "P2"
             ),
             Task(
@@ -80,6 +83,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 taskDescription = "Write unit tests for user authentication module",
                 taskStatus = "Completed",
                 taskDue = Date(System.currentTimeMillis() - 60 * 60 * 1000), // quá hạn 1 giờ
+                createdAt = Date(System.currentTimeMillis() - 10 * 60 * 60 * 1000), // tạo 10 giờ trước
                 projectId = "P3"
             )
         )

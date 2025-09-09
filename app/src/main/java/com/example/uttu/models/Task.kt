@@ -12,5 +12,6 @@ data class Task(
     var taskDescription: String,
     var taskStatus: String,
     var taskDue: Date,
+    var createdAt: Date,
     val projectId: String
 ): Parcelable

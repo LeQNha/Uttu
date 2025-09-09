@@ -14,12 +14,19 @@ import com.example.uttu.adapters.TodoAdapter
 import com.example.uttu.models.Task
 import com.example.uttu.databinding.ActivityTaskDetailsBinding
 import com.example.uttu.models.Todo
+import com.example.uttu.ui.fragments.AddTodoBottomSheet
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Date
 
 class TaskDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTaskDetailsBinding
+
+    val sampleTodos = mutableListOf(
+        Todo("1", "task1", "Research pattern flow", "Nghiên cứu pattern...", false, Date()),
+        Todo("2", "task1", "Create some option for User Flow", "Viết một số option cho flow...", true, Date()),
+        Todo("3", "task1", "Create Rapid Prototype", "Tạo prototype nhanh...", false, Date())
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,14 +75,20 @@ class TaskDetailsActivity : AppCompatActivity() {
 
             dialog.show()
         }
+
+        binding.btnAddTodo.setOnClickListener {
+            val addTodoSheet = AddTodoBottomSheet { title, desc ->
+                val newTodo = Todo("1", "1", title, desc, false, Date())
+                sampleTodos.add(newTodo)
+                binding.todoRecyclerView.adapter?.notifyItemInserted(sampleTodos.size -1)
+            }
+
+            addTodoSheet.show(supportFragmentManager, "AddTodoBottomSheet")
+        }
     }
 
     private fun todoRvSetUp(){
-        val sampleTodos = listOf(
-            Todo("1", "task1", "Research pattern flow", "Nghiên cứu pattern...", false, Date()),
-            Todo("2", "task1", "Create some option for User Flow", "Viết một số option cho flow...", true, Date()),
-            Todo("3", "task1", "Create Rapid Prototype", "Tạo prototype nhanh...", false, Date())
-        )
+
         val adapter = TodoAdapter(sampleTodos)
         // ⚠️ Quan trọng: phải có LayoutManager
         binding.todoRecyclerView.layoutManager =
