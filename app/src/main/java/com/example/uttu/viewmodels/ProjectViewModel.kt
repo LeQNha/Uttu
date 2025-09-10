@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.uttu.repositories.ProjectRepository
 
-class ProjectViewModel(val projectRepository: ProjectRepository) {
+class ProjectViewModel(val projectRepository: ProjectRepository): ViewModel() {
 
     class ProjectViewModelFactory(val projectRepository: ProjectRepository) : ViewModelProvider.Factory{
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
