@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.uttu.R
 import com.example.uttu.adapters.FriendAdapter
@@ -89,7 +90,19 @@ class FriendsFragment : Fragment() {
             )
         )
 
-        val adapter = FriendAdapter(friends)
+        val adapter = FriendAdapter(friends) { user, actionId ->
+            when(actionId){
+                R.id.action_view_profile -> {
+                    // mở trang profile
+                    Toast.makeText(requireContext(), "View ${user.username}", Toast.LENGTH_SHORT).show()
+                }
+                R.id.action_unfriend -> {
+                    // xử lý unfriend
+                    Toast.makeText(requireContext(), "Unfriend ${user.username}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+        }
         binding.friendsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.friendsRecyclerView.adapter = adapter
     }

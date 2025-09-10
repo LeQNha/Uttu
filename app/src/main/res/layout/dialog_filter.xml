@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Filter Projects"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="12dp"/>
+
+    <CheckBox
+        android:id="@+id/checkAll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="All" />
+
+    <CheckBox
+        android:id="@+id/checkAdmin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="You are admin" />
+
+    <CheckBox
+        android:id="@+id/checkCompleted"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Completed" />
+
+    <CheckBox
+        android:id="@+id/checkWorking"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Working" />
+
+    <Button
+        android:id="@+id/btnApplyFilter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Apply"
+        android:layout_marginTop="16dp"/>
+
+</LinearLayout>
