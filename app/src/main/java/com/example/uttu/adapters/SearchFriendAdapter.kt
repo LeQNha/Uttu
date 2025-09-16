@@ -13,7 +13,7 @@ import com.example.uttu.databinding.ItemSearchFriendBinding
 import com.example.uttu.models.User
 
 class SearchFriendAdapter(
-    private val users: List<User>
+    private var users: List<User>
 ) : RecyclerView.Adapter<SearchFriendAdapter.SearchFriendViewHolder>() {
 
     private val addedUsers = mutableSetOf<String>() // lưu userId đã "Added"
@@ -61,4 +61,11 @@ class SearchFriendAdapter(
     }
 
     override fun getItemCount() = users.size
+
+    fun updateUsers(newUsers: List<User>) {
+//        users.clear()
+//        users.addAll(newUsers)
+        users = newUsers
+        notifyDataSetChanged()
+    }
 }

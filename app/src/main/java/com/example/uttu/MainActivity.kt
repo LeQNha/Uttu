@@ -11,7 +11,7 @@ import com.example.uttu.ui.fragments.AccountFragment
 import com.example.uttu.ui.fragments.FriendFragment
 import com.example.uttu.ui.fragments.HomeFragment
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
 

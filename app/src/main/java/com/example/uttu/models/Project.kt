@@ -6,9 +6,9 @@ import java.util.Date
 
 @Parcelize
 data class Project(
-    val projectId: String,
-    var projectName: String,
-    var projectStatus: String,
-    var createdAt: Date
+    val projectId: String = "",
+    var projectName: String = "",
+    var projectStatus: String = "",
+    var createdAt: Date = Date()
 
 ) : Parcelable

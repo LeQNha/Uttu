@@ -8,7 +8,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 
-class AuthentificationActivity : AppCompatActivity() {
+class AuthentificationActivity : BaseActivity() {
 
     private lateinit var navController: NavController
 

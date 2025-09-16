@@ -7,16 +7,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.uttu.MainActivity
 import com.example.uttu.R
 import com.example.uttu.databinding.FragmentRequestedBinding
 import com.example.uttu.databinding.FragmentSearchBinding
 import com.example.uttu.models.User
 import com.example.uttu.ui.adapters.SearchFriendAdapter
+import com.example.uttu.viewmodels.ProjectViewModel
+import com.example.uttu.viewmodels.UserViewModel
 
 class SearchFragment : Fragment() {
 
     private var _binding : FragmentSearchBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var projectViewModel: ProjectViewModel
+    private lateinit var userViewModel: UserViewModel
 
     private lateinit var adapter: SearchFriendAdapter
 
@@ -37,7 +43,19 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        userViewModel = (requireActivity() as MainActivity).userViewModel
+
         searchFriendRvSetUp()
+        onClickListenerSetUp()
+    }
+
+    private fun onClickListenerSetUp(){
+        binding.btnSearchUser.setOnClickListener {
+            val query = binding.searchBox.text.toString().trim()
+            if(query.isNotEmpty()){
+                userViewModel.searchUsers(query)
+            }
+        }
     }
 
     private fun searchFriendRvSetUp(){
@@ -52,10 +70,19 @@ class SearchFragment : Fragment() {
         val addedSet = mutableSetOf<String>()
 
         adapter = SearchFriendAdapter(
-            users = dummyUsers,
+            emptyList()
         )
         binding.searchFriendRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.searchFriendRecyclerView.adapter = adapter
+
+        userViewModel.searchResult.observe(viewLifecycleOwner){ result ->
+            result.onSuccess { users ->
+                adapter.updateUsers(users)
+            }
+            result.onFailure { e ->
+                Toast.makeText(requireContext(), "Search failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     }
 }

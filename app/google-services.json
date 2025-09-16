@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "920287955526",
+    "project_id": "uttu-81f9e",
+    "storage_bucket": "uttu-81f9e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920287955526:android:0bbc385426a42a33895847",
+        "android_client_info": {
+          "package_name": "com.example.uttu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8D2m7vxVveaeYZbqyrkyBKvvhVz1RoS8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,7 @@
 package com.example.uttu.ui.activities
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -71,7 +72,25 @@ class SeeAllMembersActivity : AppCompatActivity() {
             )
         )
 
-        val adapter = MemberAdapter(members)
+        val adapter = MemberAdapter(members){ user, actionId ->
+            when(actionId) {
+                R.id.action_view_member_profile -> {
+                    Toast.makeText(this, "View ${user.username}", Toast.LENGTH_SHORT).show()
+                }
+
+                R.id.action_admin_authorize -> {
+                    // xử lý unfriend
+                    Toast.makeText(this, "Admin authorize ${user.username}", Toast.LENGTH_SHORT)
+                        .show()
+                }
+
+                R.id.action_delete_member -> {
+                    Toast.makeText(this, "Delete ${user.username}", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
+
         binding.recyclerMembers.layoutManager = LinearLayoutManager(this)
         binding.recyclerMembers.adapter = adapter
     }

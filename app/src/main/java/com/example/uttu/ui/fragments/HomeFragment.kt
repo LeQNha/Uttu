@@ -13,11 +13,14 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.uttu.AuthentificationActivity
+import com.example.uttu.MainActivity
 import com.example.uttu.R
 import com.example.uttu.adapters.ProjectAdapter
 import com.example.uttu.databinding.FragmentHomeBinding
 import com.example.uttu.models.Project
 import com.example.uttu.ui.activities.ProjectDetailsActivity
+import com.example.uttu.viewmodels.ProjectViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputEditText
 import java.util.Date
@@ -26,6 +29,11 @@ class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var projectViewModel: ProjectViewModel
+
+    private lateinit var adapter: ProjectAdapter
+    private var currentProjects: List<Project> = emptyList()
 
     val projectList = listOf(
         Project(projectId = "1", projectName = "Project 1", projectStatus = "Working",  createdAt = Date(
@@ -55,6 +63,8 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        projectViewModel = (requireActivity() as MainActivity).projectViewModel
+
         dropdownSetUp()
         projectRvSetUp()
         onClickListenerSetUp()
@@ -79,9 +89,21 @@ class HomeFragment : Fragment() {
                 val name = dialogView.findViewById<TextInputEditText>(R.id.etProjectName).text.toString()
 
                 if (name.isNotEmpty()) {
-                    // TODO: Thêm Project vào RecyclerView
-                    Toast.makeText(requireContext(), "Project Created: $name", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
+
+                    projectViewModel.createProject(name)
+                    projectViewModel.createProjectResult.observe(viewLifecycleOwner){ result ->
+                        result.onSuccess {
+                            Toast.makeText(requireContext(), "Project Created Successfully!", Toast.LENGTH_SHORT).show()
+                            dialog.dismiss()
+                            // gọi lại để fetch danh sách mới
+                            projectViewModel.getUserProjects()
+                        }.onFailure {
+                            Toast.makeText(requireContext(), "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+//                    // TODO: Thêm Project vào RecyclerView
+//                    Toast.makeText(requireContext(), "Project Created: $name", Toast.LENGTH_SHORT).show()
+//                    dialog.dismiss()
                 } else {
                     Toast.makeText(requireContext(), "Please enter project name", Toast.LENGTH_SHORT).show()
                 }
@@ -119,30 +141,54 @@ class HomeFragment : Fragment() {
     private fun dropdownSetUp(){
         // Lấy dữ liệu sort từ strings.xml
         val sortOptions = resources.getStringArray(R.array.sort_options)
-        val adapter = ArrayAdapter(
+        val adapterDropdown = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_list_item_1,
             sortOptions
         )
         // Gắn adapter vào AutoCompleteTextView
-        binding.sortDropdown.setAdapter(adapter)
+        binding.sortDropdown.setAdapter(adapterDropdown)
         // Xử lý sự kiện chọn
         binding.sortDropdown.setOnItemClickListener { parent, _, position, _ ->
             val selected = parent.getItemAtPosition(position).toString()
             // Ví dụ: log hoặc xử lý sort theo lựa chọn
-            println("Selected sort: $selected")
+//            println("Selected sort: $selected")
+            when(selected){
+                "A-Z" -> {
+                    val sortedList = currentProjects.sortedBy { it.projectName.lowercase() }
+                    adapter.updateData(sortedList)
+                }
+                "Time" -> {
+                    val sortedList = currentProjects.sortedByDescending { it.createdAt }
+                    adapter.updateData(sortedList)
+                }
+            }
         }
     }
 
     private fun projectRvSetUp(){
 
-        val adapter = ProjectAdapter(projectList){ project ->
+        adapter = ProjectAdapter(emptyList()){ project ->
             val intent = Intent(requireContext(), ProjectDetailsActivity::class.java)
             intent.putExtra("project", project)
             startActivity(intent)
         }
         binding.projectRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.projectRecyclerView.adapter = adapter
+
+        projectViewModel.userProjects.observe(viewLifecycleOwner){ result ->
+            result.onSuccess { projects ->
+                currentProjects = projects
+                val sortedList = currentProjects.sortedByDescending { it.createdAt }
+                adapter.updateData(sortedList)
+//                adapter.updateData(currentProjects)
+            }.onFailure {
+                Toast.makeText(requireContext(), "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Load project cho user hiện tại
+        projectViewModel.getUserProjects()
     }
 
     fun updateData(newList: List<Project>) {

@@ -30,13 +30,13 @@
             android:paddingEnd="8dp"
             android:singleLine="true"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/searchIcon"
+            app:layout_constraintEnd_toStartOf="@+id/btnSearchUser"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <!-- ImageView (icon search) -->
         <ImageView
-            android:id="@+id/searchIcon"
+            android:id="@+id/btnSearchUser"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="16dp"

@@ -7,7 +7,7 @@ import com.example.uttu.databinding.ItemProjectBinding
 import com.example.uttu.models.Project
 
 class ProjectAdapter(
-    private val projects: List<Project>,
+    private var projects: List<Project>,
     private val onItemClick: (Project) -> Unit
 ) : RecyclerView.Adapter<ProjectAdapter.ProjectViewHolder>() {
     override fun onCreateViewHolder(
@@ -35,6 +35,11 @@ class ProjectAdapter(
 
     override fun getItemCount(): Int {
         return projects.size
+    }
+
+    fun updateData(newList: List<Project>) {
+        projects = newList
+        notifyDataSetChanged()
     }
 
     inner class ProjectViewHolder(val binding: ItemProjectBinding) : RecyclerView.ViewHolder(binding.root){

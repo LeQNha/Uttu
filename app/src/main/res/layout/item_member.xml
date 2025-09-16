@@ -44,7 +44,7 @@
         android:orientation="vertical"
         android:layout_marginLeft="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/imageView3"
+        app:layout_constraintEnd_toStartOf="@+id/btnOption"
         app:layout_constraintStart_toEndOf="@+id/relativeLayout"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -67,7 +67,7 @@
     </LinearLayout>
 
     <ImageView
-        android:id="@+id/imageView3"
+        android:id="@+id/btnOption"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:src="@drawable/ic_option"
