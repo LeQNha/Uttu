@@ -10,10 +10,12 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uttu.R
 import com.example.uttu.databinding.ItemSearchFriendBinding
+import com.example.uttu.models.SearchUserResult
 import com.example.uttu.models.User
 
 class SearchFriendAdapter(
-    private var users: List<User>
+    private var users: List<SearchUserResult>,
+    private val onAddClick:(User) -> Unit
 ) : RecyclerView.Adapter<SearchFriendAdapter.SearchFriendViewHolder>() {
 
     private val addedUsers = mutableSetOf<String>() // lưu userId đã "Added"
@@ -21,29 +23,59 @@ class SearchFriendAdapter(
     inner class SearchFriendViewHolder(val binding: ItemSearchFriendBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(user: User) {
+        fun bind(searchResult: SearchUserResult) {
+            val user = searchResult.user
             binding.tvUsername.text = user.username
 
             // Kiểm tra user đã được add hay chưa
-            val isAdded = addedUsers.contains(user.userId)
-            binding.btnAdd.text = if (isAdded) "Added" else "Add"
+//            val isAdded = addedUsers.contains(user.userId)
+            val isAdded = searchResult.isRequested
+//            binding.btnAdd.text = if (isAdded) "Added" else "Add"
 
             // Đổi màu button theo trạng thái
-            if (isAdded) {
+            if (searchResult.isRequested) {
+                binding.btnAdd.text = "Added"
                 binding.btnAdd.setBackgroundResource(R.drawable.bg_button_added)
+//                binding.btnAdd.isEnabled = false  // đã gửi thì disable
             } else {
+                binding.btnAdd.text = "Add"
                 binding.btnAdd.setBackgroundResource(R.drawable.bg_button_purple_selector)
+//                binding.btnAdd.isEnabled = true
+//                binding.btnAdd.setOnClickListener {
+//                    onAddClick(user)
+//                }
+            }
+
+            // Cho phép toggle: Add -> Added -> Add
+            binding.btnAdd.setOnClickListener {
+                if(searchResult.isRequested){
+                    // hủy lời mời
+                    onAddClick(user)
+                    searchResult.isRequested = false
+
+                    binding.btnAdd.text = "Add"
+                    binding.btnAdd.setBackgroundResource(R.drawable.bg_button_purple_selector)
+                }
+                else {
+                    // gửi lời mời
+                    onAddClick(user)
+                    searchResult.isRequested = true
+
+                    binding.btnAdd.text = "Added"
+                    binding.btnAdd.setBackgroundResource(R.drawable.bg_button_added)
+                }
             }
 
             // Sự kiện click
-            binding.btnAdd.setOnClickListener {
-                if (isAdded) {
-                    addedUsers.remove(user.userId) // chuyển lại Add
-                } else {
-                    addedUsers.add(user.userId)    // chuyển thành Added
-                }
-                notifyItemChanged(adapterPosition)
-            }
+//            binding.btnAdd.setOnClickListener {
+//                if (isAdded) {
+//                    addedUsers.remove(user.userId) // chuyển lại Add
+//                } else {
+//                    onAddClick(user)
+//                    addedUsers.add(user.userId)    // chuyển thành Added
+//                }
+//                notifyItemChanged(adapterPosition)
+//            }
         }
     }
 
@@ -62,10 +94,15 @@ class SearchFriendAdapter(
 
     override fun getItemCount() = users.size
 
-    fun updateUsers(newUsers: List<User>) {
+    fun updateUsers(newUsers: List<SearchUserResult>) {
 //        users.clear()
 //        users.addAll(newUsers)
         users = newUsers
         notifyDataSetChanged()
     }
+
+    fun getUserResult(userId: String): SearchUserResult? {
+        return users.find { it.user.userId == userId }
+    }
+
 }

@@ -7,16 +7,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.uttu.MainActivity
 import com.example.uttu.R
 import com.example.uttu.adapters.FriendAdapter
 import com.example.uttu.databinding.FragmentFriendsBinding
 import com.example.uttu.databinding.FragmentHomeBinding
 import com.example.uttu.models.User
+import com.example.uttu.viewmodels.UserViewModel
 
 class FriendsFragment : Fragment() {
 
     private var _binding: FragmentFriendsBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var adapter: FriendAdapter
+    private lateinit var userViewModel: UserViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +40,8 @@ class FriendsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        userViewModel = (requireActivity() as MainActivity).userViewModel
 
         friendsRvSetUp()
     }
@@ -90,7 +97,7 @@ class FriendsFragment : Fragment() {
             )
         )
 
-        val adapter = FriendAdapter(friends) { user, actionId ->
+        adapter = FriendAdapter(emptyList()) { user, actionId ->
             when(actionId){
                 R.id.action_view_profile -> {
                     // mở trang profile
@@ -99,11 +106,22 @@ class FriendsFragment : Fragment() {
                 R.id.action_unfriend -> {
                     // xử lý unfriend
                     Toast.makeText(requireContext(), "Unfriend ${user.username}", Toast.LENGTH_SHORT).show()
+                    // TODO: gọi hàm unfriend trong repository
                 }
             }
 
         }
         binding.friendsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.friendsRecyclerView.adapter = adapter
+
+        userViewModel.friends.observe(viewLifecycleOwner) { result ->
+            result.onSuccess { users ->
+                adapter.updateData(users)
+            }.onFailure { e ->
+                Toast.makeText(requireContext(), e.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        userViewModel.getFriends()
     }
 }

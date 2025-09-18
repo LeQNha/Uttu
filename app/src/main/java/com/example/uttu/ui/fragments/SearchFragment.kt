@@ -70,7 +70,15 @@ class SearchFragment : Fragment() {
         val addedSet = mutableSetOf<String>()
 
         adapter = SearchFriendAdapter(
-            emptyList()
+            emptyList(),
+            onAddClick = {user ->
+                val result = adapter.getUserResult(user.userId)
+                if (result?.isRequested == true) {
+                    userViewModel.cancelFriendRequest(user.userId)
+                }else{
+                    userViewModel.sendFriendRequest(user.userId)
+                }
+            }
         )
         binding.searchFriendRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.searchFriendRecyclerView.adapter = adapter
@@ -81,6 +89,23 @@ class SearchFragment : Fragment() {
             }
             result.onFailure { e ->
                 Toast.makeText(requireContext(), "Search failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Quan sát kết quả gửi lời mời
+        userViewModel.sendRequestResult.observe(viewLifecycleOwner) { result ->
+            result.onSuccess {
+                Toast.makeText(requireContext(), "Request sent!", Toast.LENGTH_SHORT).show()
+            }.onFailure {
+                Toast.makeText(requireContext(), "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        userViewModel.cancelRequestResult.observe(viewLifecycleOwner){ result ->
+            result.onSuccess {
+                Toast.makeText(requireContext(), "Request canceled!", Toast.LENGTH_SHORT).show()
+            }.onFailure {
+                Toast.makeText(requireContext(), "Error: ${it.message}", Toast.LENGTH_SHORT).show()
             }
         }
 

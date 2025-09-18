@@ -23,7 +23,7 @@
         android:id="@+id/checkAdmin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="You are admin" />
+        android:text="You are leader" />
 
     <CheckBox
         android:id="@+id/checkCompleted"

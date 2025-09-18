@@ -8,11 +8,12 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uttu.R
 import com.example.uttu.models.FriendRequested
+import com.example.uttu.models.User
 
 class FriendRequestedAdapter(
-    private val friendRequesteds: List<FriendRequested>,
-    private val onAcceptClick: (FriendRequested) -> Unit,
-    private val onDeclineClick: (FriendRequested) -> Unit
+    private var friendRequesteds: List<User>,
+    private val onAcceptClick: (User) -> Unit,
+    private val onDeclineClick: (User) -> Unit
 ): RecyclerView.Adapter<FriendRequestedAdapter.FriendRequestedViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -28,7 +29,7 @@ class FriendRequestedAdapter(
         position: Int
     ) {
         val friendRequested = friendRequesteds[position]
-        holder.tvUsername.text = friendRequested.requestSenderId
+        holder.tvUsername.text = friendRequested.username
 
         holder.btnAccept.setOnClickListener { onAcceptClick(friendRequested) }
         holder.btnDecline.setOnClickListener { onDeclineClick(friendRequested) }
@@ -36,6 +37,16 @@ class FriendRequestedAdapter(
 
     override fun getItemCount(): Int {
         return friendRequesteds.size
+    }
+
+    fun updateData(newUsers: List<User>){
+        friendRequesteds = newUsers
+        notifyDataSetChanged()
+    }
+
+    fun removeUser(userId: String) {
+        friendRequesteds = friendRequesteds.filterNot { it.userId == userId }
+        notifyDataSetChanged()
     }
 
     inner class FriendRequestedViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

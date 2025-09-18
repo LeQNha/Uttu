@@ -10,7 +10,7 @@ import com.example.uttu.R
 import com.example.uttu.models.User
 
 class FriendAdapter(
-    private val friends: List<User>,
+    private var friends: List<User>,
     private val onOptionSelected: (User, Int) -> Unit
 ): RecyclerView.Adapter<FriendAdapter.FriendViewHolder>() {
     override fun onCreateViewHolder(
@@ -37,6 +37,11 @@ class FriendAdapter(
 
     override fun getItemCount(): Int {
         return friends.size
+    }
+
+    fun updateData(newFriends: List<User>) {
+        friends = newFriends
+        notifyDataSetChanged()
     }
 
     inner class FriendViewHolder(val binding: ItemFriendBinding) : RecyclerView.ViewHolder(binding.root)
