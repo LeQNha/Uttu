@@ -44,6 +44,11 @@ class FriendAdapter(
         notifyDataSetChanged()
     }
 
+    fun removeFriend(userId: String){
+        friends = friends.filterNot { it.userId == userId }
+        notifyDataSetChanged()
+    }
+
     inner class FriendViewHolder(val binding: ItemFriendBinding) : RecyclerView.ViewHolder(binding.root)
 
     private fun showPupupMenu(view: View, friend: User, position: Int){

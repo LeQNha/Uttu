@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.android.gms.tasks.Task
+import kotlinx.coroutines.tasks.await
 
 class UserRepository {
 
@@ -331,6 +332,63 @@ class UserRepository {
                     .addOnFailureListener { e -> callback(null, e.message) }
             }
             .addOnFailureListener { e -> callback(null, e.message) }
+    }
+
+    fun unfriend(friendId: String, callback: (Boolean, String?) -> Unit){
+        val currentUserId = auth.currentUser?.uid ?: run {
+            callback(false, "User not logged in")
+            return
+        }
+
+        val batch = firestore.batch()
+        val currentUserFriendRef = firestore.collection("users")
+            .document(currentUserId)
+            .collection("friends")
+            .document(friendId)
+        batch.delete(currentUserFriendRef)
+
+        val friendUserRef = firestore.collection("users")
+            .document(friendId)
+            .collection("friends")
+            .document(currentUserId)
+        batch.delete(friendUserRef)
+        batch.commit()
+            .addOnSuccessListener { callback(true, null) }
+            .addOnFailureListener { e -> callback(false, e.message) }
+    }
+
+    suspend fun searchFriends(query: String): Result<List<User>>{
+        return try {
+            val currentUserId = auth.currentUser?.uid ?: return Result.success(emptyList())
+
+            // Lấy danh sách friendId
+            val friendsSnapshot = firestore.collection("users")
+                .document(currentUserId)
+                .collection("friends")
+                .get()
+                .await()
+
+            val friendIds = friendsSnapshot.documents.map { it.id }
+
+            if (friendIds.isEmpty()) {
+                return Result.success(emptyList())
+            }
+
+            // Lấy danh sách User theo friendIds
+            val usersSnapshot = firestore.collection("users")
+                .whereIn("userId", friendIds.take(10)) // Firestore limit max 10 cho whereIn
+                .get()
+                .await()
+
+            val friends = usersSnapshot.toObjects(User::class.java)
+
+            // Lọc theo query
+            val filtered = friends.filter { it.username.contains(query, ignoreCase = true) }
+
+            Result.success(filtered)
+        }catch (e: Exception){
+            Result.failure(e)
+        }
     }
 
     fun logout() {

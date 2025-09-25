@@ -5,6 +5,9 @@ import com.example.uttu.firebase.FirebaseInstance
 import com.example.uttu.models.Leader
 import com.example.uttu.models.Member
 import com.example.uttu.models.Project
+import com.example.uttu.models.TeamMember
+import com.example.uttu.models.User
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -14,6 +17,8 @@ class ProjectRepository {
 
     private val auth: FirebaseAuth = FirebaseInstance.auth
     private val firestore: FirebaseFirestore = FirebaseInstance.firebaseFirestoreInstance
+
+    fun getCurrentUserId(): String? = auth.currentUser?.uid
 
     suspend fun createProject(projectName: String): Result<Unit>{
         return try {
@@ -80,6 +85,143 @@ class ProjectRepository {
             Result.success(projects)
         }catch (e: Exception) {
             Log.e("DEBUG", "Error in getUserProjects", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun addMemberToTeam(teamId: String, userId: String): Result<Boolean>{
+        return try {
+            val membersRef = firestore.collection("members")
+
+            // kiểm tra đã tồn tại chưa
+            val querySnapshot = membersRef
+                .whereEqualTo("memberId", userId)
+                .whereEqualTo("teamId", teamId)
+                .get()
+                .await()
+
+            if (!querySnapshot.isEmpty) {
+                // đã tồn tại
+                Result.failure(Exception("Member already in the team"))
+            } else {
+                val memberData = mapOf(
+                    "memberId" to userId,
+                    "teamId" to teamId
+                )
+                membersRef.add(memberData).await()
+                Result.success(true)
+            }
+        }catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun loadTeamMembers(teamId: String, onResult: (Result<List<TeamMember>>) -> Unit){
+        val teamMembers = mutableListOf<TeamMember>()
+
+        firestore.collection("leaders")
+            .whereEqualTo("teamId", teamId)
+            .get()
+            .addOnSuccessListener { leaderSnapshot ->
+                val leaderIds = leaderSnapshot.mapNotNull { it.getString("leaderId") }.toSet()
+
+                firestore.collection("members")
+                    .whereEqualTo("teamId", teamId)
+                    .get()
+                    .addOnSuccessListener { memberSnapshot ->
+                        val memberTasks = memberSnapshot.map { doc ->
+                            val memberId = doc.getString("memberId") ?: return@map null
+                            firestore.collection("users").document(memberId).get()
+                                .continueWith { task ->
+                                    task.result?.toObject(User::class.java)?.let {user ->
+                                        val role = if (leaderIds.contains(memberId)) "Leader" else "Member"
+                                        teamMembers.add(TeamMember(user, role))
+                                    }
+                                }
+                        }.filterNotNull()
+
+                        Tasks.whenAllSuccess<Void>(memberTasks)
+                            .addOnSuccessListener {
+                                onResult(Result.success(teamMembers))
+                            }
+                            .addOnFailureListener { e -> onResult(Result.failure(e)) }
+                    }
+                    .addOnFailureListener { e -> onResult(Result.failure(e)) }
+
+            }
+            .addOnFailureListener { e -> onResult(Result.failure(e)) }
+    }
+
+    suspend fun removeMemberFromTeam(teamId: String, memberId: String): Result<Boolean>{
+        return try {
+            val membersRef = firestore.collection("members")
+            val leadersRef = firestore.collection("leaders")
+
+            val memberQuery = membersRef
+                .whereEqualTo("teamId", teamId)
+                .whereEqualTo("memberId", memberId)
+                .get()
+                .await()
+
+//            if (querySnapshot.isEmpty) {
+//                Result.failure(Exception("Member not found in team"))
+//            } else {
+//                for (doc in querySnapshot.documents) {
+//                    doc.reference.delete().await()
+//                }
+//
+//                Result.success(true)
+//            }
+            for (doc in memberQuery.documents) {
+                doc.reference.delete().await()
+            }
+
+            // Xóa trong leaders nếu có
+            val leaderQuery = leadersRef
+                .whereEqualTo("teamId", teamId)
+                .whereEqualTo("leaderId", memberId)
+                .get()
+                .await()
+
+            for (doc in leaderQuery.documents) {
+                doc.reference.delete().await()
+            }
+
+            Result.success(true)
+        }catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteProject(teamId: String): Result<Boolean>{
+        return try {
+            val batch = firestore.batch()
+
+            //xóa project
+            val projectRef = firestore.collection("projects").document(teamId)
+            batch.delete(projectRef)
+
+            val membersSnapshot = firestore.collection("members")
+                .whereEqualTo("teamId", teamId)
+                .get()
+                .await()
+            for (doc in membersSnapshot.documents){
+                batch.delete(doc.reference)
+            }
+
+            // Xóa leaders
+            val leadersSnapshot = firestore.collection("leaders")
+                .whereEqualTo("teamId", teamId)
+                .get()
+                .await()
+            for (doc in leadersSnapshot.documents) {
+                batch.delete(doc.reference)
+            }
+
+            batch.commit().await()
+
+            Result.success(true)
+        }catch (e: Exception) {
             Result.failure(e)
         }
     }

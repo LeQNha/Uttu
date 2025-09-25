@@ -1,20 +1,28 @@
 package com.example.uttu.ui.activities
 
 import android.os.Bundle
+import android.view.View
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.uttu.R
 import com.example.uttu.adapters.MemberAdapter
 import com.example.uttu.databinding.ActivitySeeAllMembersBinding
 import com.example.uttu.models.User
+import androidx.core.widget.addTextChangedListener
+import com.example.uttu.BaseActivity
+import com.example.uttu.adapters.SearchFriendMemberAdapter
 
-class SeeAllMembersActivity : AppCompatActivity() {
+class SeeAllMembersActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySeeAllMembersBinding
+    private var teamId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,7 +31,16 @@ class SeeAllMembersActivity : AppCompatActivity() {
         binding = ActivitySeeAllMembersBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        teamId = intent.getStringExtra("teamId") // lấy projectId truyền sang
+
+        onClickListenerSetUp()
         memberRvSetUp()
+    }
+
+    private fun onClickListenerSetUp(){
+        binding.fabAddNewMember.setOnClickListener {
+            showSearchFriendDialog()
+        }
     }
 
     private fun memberRvSetUp(){
@@ -72,26 +89,123 @@ class SeeAllMembersActivity : AppCompatActivity() {
             )
         )
 
-        val adapter = MemberAdapter(members){ user, actionId ->
+        val adapter = MemberAdapter(emptyList(), "Member"){ member, actionId ->
             when(actionId) {
                 R.id.action_view_member_profile -> {
-                    Toast.makeText(this, "View ${user.username}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "View ${member.user.username}", Toast.LENGTH_SHORT).show()
                 }
 
-                R.id.action_admin_authorize -> {
+                R.id.action_leader_authorize -> {
                     // xử lý unfriend
-                    Toast.makeText(this, "Admin authorize ${user.username}", Toast.LENGTH_SHORT)
+                    Toast.makeText(this, "Admin authorize ${member.user.username}", Toast.LENGTH_SHORT)
                         .show()
                 }
 
                 R.id.action_delete_member -> {
-                    Toast.makeText(this, "Delete ${user.username}", Toast.LENGTH_SHORT)
-                        .show()
+//                    Toast.makeText(this, "Delete ${user.user.username}", Toast.LENGTH_SHORT)
+//                        .show()
+                    teamId?.let { id ->
+//                        projectViewModel.removeMemberFromTeam(id, member.user.userId)
+                        AlertDialog.Builder(this)
+                            .setTitle("Confirm Delete")
+                            .setMessage("Are you sure you want to remove ${member.user.username}?")
+                            .setPositiveButton("Yes") { _, _ ->
+                                projectViewModel.removeMemberFromTeam(id, member.user.userId)
+                            }
+                            .setNegativeButton("Cancel", null)
+                            .show()
+                    }
                 }
             }
         }
 
         binding.recyclerMembers.layoutManager = LinearLayoutManager(this)
         binding.recyclerMembers.adapter = adapter
+
+        teamId?.let{ id ->
+            projectViewModel.loadTeamMembers(id)
+        }
+
+        projectViewModel.teamMembers.observe(this){result ->
+            result.onSuccess { (members, myRole) ->
+                adapter.updateData(members)
+                adapter.updateCurrentUserRole(myRole)
+            }.onFailure { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        projectViewModel.removeMemberResult.observe(this){ result ->
+            result.onSuccess {
+                Toast.makeText(this, "Member removed successfully", Toast.LENGTH_SHORT).show()
+                teamId?.let { id ->
+                    projectViewModel.loadTeamMembers(id) // load lại danh sách
+                }
+            }.onFailure { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showSearchFriendDialog(){
+        val dialogView = layoutInflater.inflate(R.layout.dialog_search_friends, null)
+
+        // lấy các view trong dialog
+        val etSearch = dialogView.findViewById<EditText>(R.id.etSearchFriend)
+        val rvFriends = dialogView.findViewById<RecyclerView>(R.id.rvSearchFriends)
+
+        val adapter = SearchFriendMemberAdapter(emptyList()){ user ->
+//            Toast.makeText(this, "Choose ${user.username}", Toast.LENGTH_SHORT).show()
+            teamId?.let {
+                projectViewModel.addMemberToTeam(it, user.userId)
+            } ?: Toast.makeText(this, "Can not found teamId", Toast.LENGTH_SHORT).show()
+        }
+
+        rvFriends.layoutManager = LinearLayoutManager(this)
+        rvFriends.adapter = adapter
+
+        // tạo dialog
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialog.show()
+
+        userViewModel.searchFriendsResult.observe(this){result ->
+            result.onSuccess { users ->
+                if (users.isEmpty()) {
+                    rvFriends.visibility = View.GONE
+                } else {
+                    rvFriends.visibility = View.VISIBLE
+                    adapter.updateData(users)
+                }
+            }.onFailure { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // khi gõ text thì cho hiện recyclerview
+        etSearch.addTextChangedListener { text ->
+            val query = text?.toString()?.trim().orEmpty()
+            if (text.isNullOrEmpty()) {
+                rvFriends.visibility = View.GONE
+            } else {
+//                rvFriends.visibility = View.VISIBLE
+                // thêm adapter hiển thị kết quả tìm kiếm bạn bè ở đây
+                userViewModel.searchFriends(query)
+            }
+        }
+
+        projectViewModel.addMemberResult.observe(this) { result ->
+            result.onSuccess {
+                Toast.makeText(this, "Join team successfully", Toast.LENGTH_SHORT).show()
+                teamId?.let { id ->
+                    projectViewModel.loadTeamMembers(id) // load lại danh sách
+                }
+            }.onFailure { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

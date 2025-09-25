@@ -4,8 +4,8 @@
         android:id="@+id/action_view_member_profile"
         android:title="View Profile"/>
     <item
-        android:id="@+id/action_admin_authorize"
-        android:title="Admin Authorize"/>
+        android:id="@+id/action_leader_authorize"
+        android:title="Leader Authorize"/>
     <item
         android:id="@+id/action_delete_member"
         android:title="Delete Member"/>

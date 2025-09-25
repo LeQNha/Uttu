@@ -2,21 +2,28 @@ package com.example.uttu.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.uttu.BaseActivity
 import com.example.uttu.R
 import com.example.uttu.adapters.TaskAdapter
 import com.example.uttu.databinding.ActivityProjectDetailsBinding
 import com.example.uttu.models.Project
 import com.example.uttu.models.Task
+import com.example.uttu.viewmodels.ProjectViewModel
 import java.util.Date
 
-class ProjectDetailsActivity : AppCompatActivity() {
+class ProjectDetailsActivity : BaseActivity() {
 
     private lateinit var binding: ActivityProjectDetailsBinding
+    private var currentUserRole: String = "Member" // default
+
+    var project: Project? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,14 +32,16 @@ class ProjectDetailsActivity : AppCompatActivity() {
         binding = ActivityProjectDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val project = intent.getParcelableExtra<Project>("project")
+        project = intent.getParcelableExtra<Project>("project")
 
         project?.let {
             binding.projectName.text = it.projectName
+            projectViewModel.loadTeamMembers(it.projectId)
         }
 
         taskRvSetUp()
         onClickLisenerSetUp()
+        resultObserve()
 
     }
 
@@ -44,7 +53,42 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
         binding.btnSeeAllMembers.setOnClickListener {
             val intent = Intent(this, SeeAllMembersActivity::class.java)
+            intent.putExtra("teamId", project?.projectId) // truyền projectId
             startActivity(intent)
+        }
+
+        binding.btnDeleteProject.setOnClickListener {
+            val teamId = project?.projectId ?: return@setOnClickListener
+            if (currentUserRole == "Leader") {
+                AlertDialog.Builder(this)
+                    .setTitle("Delete Project")
+                    .setMessage("Do you really want to delete this project?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        projectViewModel.deleteProject(teamId)
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            } else {
+                Toast.makeText(this, "You can not do this action", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun resultObserve(){
+        // Lắng nghe kết quả xoá
+        projectViewModel.deleteProjectResult.observe(this) { result ->
+            result.onSuccess {
+                Toast.makeText(this, "Project deleted successfully", Toast.LENGTH_SHORT).show()
+                finish() // quay lại màn trước
+            }.onFailure { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        projectViewModel.teamMembers.observe(this) { result ->
+            result.onSuccess { pair ->
+                currentUserRole = pair.second
+            }
         }
     }
 

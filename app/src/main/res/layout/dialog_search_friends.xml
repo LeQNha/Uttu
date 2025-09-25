@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+    
+    <EditText
+        android:id="@+id/etSearchFriend"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="Search friend..."
+        android:background="@drawable/bg_search_box"
+        android:paddingStart="16dp"
+        android:singleLine="true"
+        android:imeOptions="actionSearch"
+        android:inputType="text"/>
+
+    <!-- Recycler hiển thị user -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSearchFriends"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="12dp"/>
+
+</LinearLayout>

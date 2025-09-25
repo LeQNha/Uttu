@@ -105,8 +105,8 @@ class FriendsFragment : Fragment() {
                 }
                 R.id.action_unfriend -> {
                     // xử lý unfriend
-                    Toast.makeText(requireContext(), "Unfriend ${user.username}", Toast.LENGTH_SHORT).show()
-                    // TODO: gọi hàm unfriend trong repository
+//                    Toast.makeText(requireContext(), "Unfriend ${user.username}", Toast.LENGTH_SHORT).show()
+                    userViewModel.unfriend(user.userId)
                 }
             }
 
@@ -123,5 +123,14 @@ class FriendsFragment : Fragment() {
         }
 
         userViewModel.getFriends()
+
+        userViewModel.unfriendResult.observe(viewLifecycleOwner){ result ->
+            result.onSuccess { friendId ->
+                adapter.removeFriend(friendId)
+                Toast.makeText(requireContext(), "Unfriended successfully", Toast.LENGTH_SHORT).show()
+            }.onFailure { e ->
+                Toast.makeText(requireContext(), e.message, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

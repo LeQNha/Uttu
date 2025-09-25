@@ -70,6 +70,12 @@ class HomeFragment : Fragment() {
         onClickListenerSetUp()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Refresh lại danh sách project khi quay về fragment
+        projectViewModel.getUserProjects()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

@@ -4,9 +4,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.uttu.models.SearchUserResult
 import com.example.uttu.models.User
 import com.example.uttu.repositories.UserRepository
+import kotlinx.coroutines.launch
 
 class UserViewModel(val userRepository: UserRepository): ViewModel() {
 
@@ -36,6 +38,12 @@ class UserViewModel(val userRepository: UserRepository): ViewModel() {
 
     private val _friends = MutableLiveData<Result<List<User>>>()
     val friends: LiveData<Result<List<User>>> = _friends
+
+    private val _unfriendResult = MutableLiveData<Result<String>>()
+    val unfriendResult: LiveData<Result<String>> = _unfriendResult
+
+    private val _searchFriendsResult = MutableLiveData<Result<List<User>>>()
+    val searchFriendsResult: LiveData<Result<List<User>>> = _searchFriendsResult
 
 
     fun registerUser(email: String, password: String, username: String){
@@ -124,6 +132,23 @@ class UserViewModel(val userRepository: UserRepository): ViewModel() {
             if(users != null){
                 _friends.value = Result.success(users)
             }
+        }
+    }
+
+    fun unfriend(friendId: String){
+        userRepository.unfriend(friendId){success, error ->
+            if(success){
+                _unfriendResult.value = Result.success(friendId)
+            }else {
+                _unfriendResult.value = Result.failure(Exception(error ?: "Failed to unfriend"))
+            }
+        }
+    }
+
+    fun searchFriends(query: String) {
+        viewModelScope.launch {
+            val result = userRepository.searchFriends(query)
+            _searchFriendsResult.value = result
         }
     }
 
