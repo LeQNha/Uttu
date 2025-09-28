@@ -175,6 +175,7 @@
 
                 <!-- Card Planning -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardViewStatusPlanning"
                     android:layout_width="0dp"
                     android:layout_height="100dp"
                     android:layout_margin="4dp"
@@ -204,6 +205,7 @@
 
                 <!-- Card Working -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardViewStatusWorking"
                     android:layout_width="0dp"
                     android:layout_height="100dp"
                     android:layout_margin="4dp"
@@ -233,6 +235,7 @@
 
                 <!-- Card Completed -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardViewStatusCompleted"
                     android:layout_width="0dp"
                     android:layout_height="100dp"
                     android:layout_margin="4dp"

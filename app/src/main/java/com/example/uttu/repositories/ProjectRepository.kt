@@ -225,4 +225,26 @@ class ProjectRepository {
             Result.failure(e)
         }
     }
+
+    fun updateProjectName( projectId: String,
+                           newName: String,
+                           onResult: (Result<Unit>) -> Unit){
+        firestore.collection("projects")
+            .document(projectId)
+            .update("projectName", newName)
+            .addOnSuccessListener {
+                onResult(Result.success(Unit))
+            }
+            .addOnFailureListener { e ->
+                onResult(Result.failure(e))
+            }
+    }
+
+    // Update project status
+    fun updateProjectStatus(projectId: String, newStatus: String, callback: (Result<Unit>) -> Unit) {
+        firestore.collection("projects").document(projectId)
+            .update("projectStatus", newStatus)
+            .addOnSuccessListener { callback(Result.success(Unit)) }
+            .addOnFailureListener { e -> callback(Result.failure(e)) }
+    }
 }

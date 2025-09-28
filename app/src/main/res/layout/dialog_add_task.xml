@@ -80,7 +80,6 @@
         app:layout_constraintBottom_toBottomOf="@id/tilTaskDue"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSaveTask"
         android:layout_width="match_parent"

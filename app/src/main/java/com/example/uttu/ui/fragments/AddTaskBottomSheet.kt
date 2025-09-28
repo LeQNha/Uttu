@@ -65,13 +65,13 @@ class AddTaskBottomSheet(
     private fun onClickListenerSetUp(){
         btnSave.setOnClickListener {
             val task = Task(
-                taskId = UUID.randomUUID().toString(),
+                taskId = "",
                 taskTitle = etTitle.text.toString(),
                 taskDescription = etDesc.text.toString(),
                 taskStatus = "Open",
                 taskDue = dueDate?.time ?: Date(),
-                createdAt = Date(System.currentTimeMillis() - 10 * 60 * 60 * 1000), // tạo 10 giờ trước
-                projectId = "your_project_id"
+                createdAt = Date(), // thời điểm hiện tại
+                projectId = ""
             )
             onTaskAdded(task)
             dismiss()

@@ -7,11 +7,11 @@ import java.util.Date
 
 @Parcelize
 data class Task(
-    val taskId: String,
-    var taskTitle: String,
-    var taskDescription: String,
-    var taskStatus: String,
-    var taskDue: Date,
-    var createdAt: Date,
-    val projectId: String
+    val taskId: String = "",
+    var taskTitle: String = "",
+    var taskDescription: String = "",
+    var taskStatus: String = "",
+    var taskDue: Date? = Date(),
+    var createdAt: Date? = Date(),
+    val projectId: String = ""
 ): Parcelable

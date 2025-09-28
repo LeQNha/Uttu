@@ -3,12 +3,15 @@ package com.example.uttu.ui.activities
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.uttu.BaseActivity
 import com.example.uttu.R
 import com.example.uttu.adapters.TaskAdapter
 import com.example.uttu.databinding.ActivitySeeAllTasksBinding
@@ -16,9 +19,14 @@ import com.example.uttu.models.Task
 import com.example.uttu.ui.fragments.AddTaskBottomSheet
 import java.util.Date
 
-class SeeAllTasksActivity : AppCompatActivity() {
+class SeeAllTasksActivity : BaseActivity() {
 
     private lateinit var binding : ActivitySeeAllTasksBinding
+    private var currentUserRole: String = "Member" // hoặc "Leader"
+    private var projectId: String = "" // sẽ truyền từ ProjectDetailsActivity
+
+    private lateinit var taskAdapter: TaskAdapter
+    private val taskList = mutableListOf<Task>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,17 +40,37 @@ class SeeAllTasksActivity : AppCompatActivity() {
 //            insets
 //        }
 
+        // lấy role từ Intent
+        currentUserRole = intent.getStringExtra("userRole") ?: "Member"
+        projectId = intent.getStringExtra("projectId") ?: ""
+        Log.d("SeeAllTasks", "projectId = $projectId")
+
+        // chỉ Leader mới được thấy FAB
+        if (currentUserRole == "Leader") {
+            binding.fabAddTask.show()
+        } else {
+            binding.fabAddTask.hide()
+        }
+
+
         dropdownSetUp()
         taskRvSetUp()
         setupTabs()
         onClickListenerSetUp()
+        observeViewModel()
     }
 
     private fun onClickListenerSetUp(){
 
         binding.fabAddTask.setOnClickListener {
             val bottomSheet = AddTaskBottomSheet{ newTask ->
+                // gán projectId cho task
+                val taskWithProject = newTask.copy(projectId = projectId)
+                taskViewModel.addTask(taskWithProject)
 
+                // cập nhật ngay UI (optimistic update)
+//                taskList.add(taskWithProject)
+//                taskAdapter.notifyItemInserted(taskList.size - 1)
             }
             bottomSheet.show(supportFragmentManager, "AddTaskBottomSheet")
         }
@@ -105,13 +133,17 @@ class SeeAllTasksActivity : AppCompatActivity() {
                 projectId = "P3"
             )
         )
-        val adapter = TaskAdapter(sampleTasks){selectedTask ->
+        taskAdapter = TaskAdapter(taskList){selectedTask ->
             val intent = Intent(this, TaskDetailsActivity::class.java)
             intent.putExtra("task", selectedTask)
             startActivity(intent)
         }
-        binding.taskRecyclerView.adapter = adapter
+        binding.taskRecyclerView.adapter = taskAdapter
         binding.taskRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        // gọi loadTasks
+        Log.d("SeeAllTasks", "Calling loadTasks with projectId=$projectId")
+        taskViewModel.loadTasks(projectId)
     }
 
     private fun setupTabs(){
@@ -134,4 +166,27 @@ class SeeAllTasksActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun observeViewModel() {
+        taskViewModel.addTaskResult.observe(this) { (success, docId) ->
+            if (success && docId != null) {
+                Toast.makeText(this, "Task added successfully", Toast.LENGTH_SHORT).show()
+                taskViewModel.loadTasks(projectId) // reload sau khi add
+            } else {
+                Toast.makeText(this, "Failed to add task", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        taskViewModel.tasks.observe(this) { list ->
+            Log.d("SeeAllTasks", "Tasks loaded from ViewModel: size=${list.size}")
+            list.forEach { task ->
+                Log.d("SeeAllTasks", "Task: ${task.taskId}, title=${task.taskTitle}, projectId=${task.projectId}, createdAt=${task.createdAt}")
+            }
+
+            taskList.clear()
+            taskList.addAll(list)
+            taskAdapter.notifyDataSetChanged()
+        }
+    }
+
 }

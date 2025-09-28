@@ -35,6 +35,12 @@ class ProjectViewModel(val projectRepository: ProjectRepository): ViewModel() {
     private val _teamMembers = MutableLiveData<Result<Pair<List<TeamMember>, String>>>()
     val teamMembers: LiveData<Result<Pair<List<TeamMember>, String>>> = _teamMembers
 
+    private val _updateProjectNameResult = MutableLiveData<Result<Unit>>()
+    val updateProjectNameResult: LiveData<Result<Unit>> = _updateProjectNameResult
+
+    private val _updateProjectStatusResult = MutableLiveData<Result<Unit>>()
+    val updateProjectStatusResult: LiveData<Result<Unit>> = _updateProjectStatusResult
+
     fun createProject(projectName: String){
         viewModelScope.launch {
             val result = projectRepository.createProject(projectName)
@@ -85,6 +91,20 @@ class ProjectViewModel(val projectRepository: ProjectRepository): ViewModel() {
         viewModelScope.launch {
             val result = projectRepository.deleteProject(teamId)
             _deleteProjectResult.value = result
+        }
+    }
+
+    fun updateProjectName(projectId: String, newName: String) {
+        projectRepository.updateProjectName(projectId, newName) { result ->
+            _updateProjectNameResult.postValue(result)
+        }
+    }
+
+    fun updateProjectStatus(projectId: String, newStatus: String) {
+        viewModelScope.launch {
+            projectRepository.updateProjectStatus(projectId, newStatus) { result ->
+                _updateProjectStatusResult.postValue(result)
+            }
         }
     }
 
