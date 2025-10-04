@@ -7,6 +7,7 @@ import com.example.uttu.models.User
 import com.example.uttu.models.assignedMember
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 class TaskRepository {
 
@@ -161,6 +162,11 @@ class TaskRepository {
                 android.util.Log.e("TaskAdapter", "Update failed: ${e.message}")
                 callback(Result.failure(e))
             }
+    }
+
+    suspend fun updateTaskField(taskId: String, field: String, value: Any) {
+        val taskRef = tasksCollection.document(taskId)
+        taskRef.update(field, value).await()
     }
 
 }

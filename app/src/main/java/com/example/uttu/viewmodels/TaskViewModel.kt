@@ -30,6 +30,9 @@ class TaskViewModel(val taskRepository: TaskRepository): ViewModel() {
     private val _updateTaskStatusResult = MutableLiveData<Result<Unit>>()
     val updateTaskStatusResult: LiveData<Result<Unit>> = _updateTaskStatusResult
 
+    private val _updateTaskFieldResult = MutableLiveData<Result<Unit>>()
+    val updateTaskFieldResult: LiveData<Result<Unit>> get() = _updateTaskFieldResult
+
 
     fun addTask(task: Task) {
         taskRepository.addTask(task) { success, docId ->
@@ -64,6 +67,17 @@ class TaskViewModel(val taskRepository: TaskRepository): ViewModel() {
     fun updateTaskStatus(taskId: String, newStatus: String) {
         taskRepository.updateTaskStatus(taskId, newStatus) { result ->
             _updateTaskStatusResult.postValue(result)
+        }
+    }
+
+    fun updateTaskField(taskId: String, field: String, value: Any) {
+        viewModelScope.launch {
+            try {
+                taskRepository.updateTaskField(taskId, field, value)
+                _updateTaskFieldResult.postValue(Result.success(Unit))
+            } catch (e: Exception) {
+                _updateTaskFieldResult.postValue(Result.failure(e))
+            }
         }
     }
 
