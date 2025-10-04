@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FBFBFB"
-    tools:context=".ui.activities.SeeAllMembersActivity">
+    tools:context=".ui.activities.SeeAllAssignedMembersActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/customAppbar"
@@ -96,7 +96,7 @@
 
         <!-- RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerMembers"
+            android:id="@+id/recyclerAssignedMembers"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:padding="8dp"
@@ -109,7 +109,7 @@
 
         <!-- Floating Button -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabAddNewMember"
+            android:id="@+id/fabAssignNewMember"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/outline_add_24"

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.uttu.models.Project
 import com.example.uttu.models.TeamMember
+import com.example.uttu.models.User
 import com.example.uttu.repositories.ProjectRepository
 import kotlinx.coroutines.launch
 
@@ -40,6 +41,10 @@ class ProjectViewModel(val projectRepository: ProjectRepository): ViewModel() {
 
     private val _updateProjectStatusResult = MutableLiveData<Result<Unit>>()
     val updateProjectStatusResult: LiveData<Result<Unit>> = _updateProjectStatusResult
+
+    private val _searchMembersResults = MutableLiveData<List<User>>()
+    val searchMembersResults: LiveData<List<User>> = _searchMembersResults
+
 
     fun createProject(projectName: String){
         viewModelScope.launch {
@@ -105,6 +110,12 @@ class ProjectViewModel(val projectRepository: ProjectRepository): ViewModel() {
             projectRepository.updateProjectStatus(projectId, newStatus) { result ->
                 _updateProjectStatusResult.postValue(result)
             }
+        }
+    }
+
+    fun searchMembersInProject(projectId: String, keyword: String) {
+        projectRepository.searchMembersInProject(projectId, keyword) { list ->
+            _searchMembersResults.postValue(list)
         }
     }
 

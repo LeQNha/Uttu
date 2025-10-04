@@ -43,7 +43,7 @@ class SeeAllTasksActivity : BaseActivity() {
         // lấy role từ Intent
         currentUserRole = intent.getStringExtra("userRole") ?: "Member"
         projectId = intent.getStringExtra("projectId") ?: ""
-        Log.d("SeeAllTasks", "projectId = $projectId")
+        Log.d("SeeAllTasks", "--- receive user role = $currentUserRole")
 
         // chỉ Leader mới được thấy FAB
         if (currentUserRole == "Leader") {
@@ -58,6 +58,12 @@ class SeeAllTasksActivity : BaseActivity() {
         setupTabs()
         onClickListenerSetUp()
         observeViewModel()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh lại danh sách project khi quay về fragment
+        taskViewModel.loadTasks(projectId)
     }
 
     private fun onClickListenerSetUp(){
@@ -133,16 +139,31 @@ class SeeAllTasksActivity : BaseActivity() {
                 projectId = "P3"
             )
         )
-        taskAdapter = TaskAdapter(taskList){selectedTask ->
-            val intent = Intent(this, TaskDetailsActivity::class.java)
-            intent.putExtra("task", selectedTask)
-            startActivity(intent)
-        }
+//        taskAdapter = TaskAdapter(taskList){selectedTask ->
+//            val intent = Intent(this, TaskDetailsActivity::class.java)
+//            intent.putExtra("task", selectedTask)
+//            intent.putExtra("userRole", currentUserRole)
+//            intent.putExtra("projectId", projectId)
+//            startActivity(intent)
+//        }
+        taskAdapter = TaskAdapter(
+            taskList,
+            onItemClick = { selectedTask ->
+                val intent = Intent(this, TaskDetailsActivity::class.java)
+                intent.putExtra("task", selectedTask)
+                intent.putExtra("userRole", currentUserRole)
+                intent.putExtra("projectId", projectId)
+                startActivity(intent)
+            },
+            onStatusUpdate = { taskId, newStatus ->
+                taskViewModel.updateTaskStatus(taskId, newStatus)
+            }
+        )
+
         binding.taskRecyclerView.adapter = taskAdapter
         binding.taskRecyclerView.layoutManager = LinearLayoutManager(this)
 
         // gọi loadTasks
-        Log.d("SeeAllTasks", "Calling loadTasks with projectId=$projectId")
         taskViewModel.loadTasks(projectId)
     }
 
@@ -186,6 +207,14 @@ class SeeAllTasksActivity : BaseActivity() {
             taskList.clear()
             taskList.addAll(list)
             taskAdapter.notifyDataSetChanged()
+        }
+
+        taskViewModel.updateTaskStatusResult.observe(this) { result ->
+            result.onSuccess {
+                Log.d("SeeAllTasks", "Task status updated successfully")
+            }.onFailure { e ->
+                Toast.makeText(this, "Failed to update task: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

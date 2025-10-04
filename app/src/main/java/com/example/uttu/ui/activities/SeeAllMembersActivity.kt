@@ -23,6 +23,7 @@ class SeeAllMembersActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySeeAllMembersBinding
     private var teamId: String? = null
+    private var currentUserRole: String = "Member" // hoặc "Leader"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +33,14 @@ class SeeAllMembersActivity : BaseActivity() {
         setContentView(binding.root)
 
         teamId = intent.getStringExtra("teamId") // lấy projectId truyền sang
+        currentUserRole = intent.getStringExtra("userRole") ?: "Member"
+
+        // chỉ Leader mới được thấy FAB
+        if (currentUserRole == "Leader") {
+            binding.fabAddNewMember.show()
+        } else {
+            binding.fabAddNewMember.hide()
+        }
 
         onClickListenerSetUp()
         memberRvSetUp()

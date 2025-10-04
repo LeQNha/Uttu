@@ -247,4 +247,39 @@ class ProjectRepository {
             .addOnSuccessListener { callback(Result.success(Unit)) }
             .addOnFailureListener { e -> callback(Result.failure(e)) }
     }
+
+    fun searchMembersInProject(projectId: String, keyword: String, onResult: (List<User>) -> Unit){
+        // 1. Lấy các memberId thuộc project
+        firestore.collection("members")
+            .whereEqualTo("teamId", projectId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val memberIds = snapshot.documents.mapNotNull { it.getString("memberId") }
+                android.util.Log.d("DEBUG_SEARCH", "Members found in project=$projectId -> $memberIds")
+
+                if (memberIds.isEmpty()) {
+                    onResult(emptyList())
+                    return@addOnSuccessListener
+                }
+
+                // 2. Lấy user theo memberIds
+                firestore.collection("users")
+                    .whereIn("userId", memberIds.take(10)) // Firestore chỉ cho max 10 phần tử 1 lần
+                    .get()
+                    .addOnSuccessListener { userSnapshot ->
+                        val users = userSnapshot.toObjects(User::class.java)
+                            .filter { it.username.contains(keyword, ignoreCase = true) }
+                        android.util.Log.d("DEBUG_SEARCH", "Users fetched=${users.map { it.username }} with keyword=$keyword")
+                        onResult(users)
+                    }
+                    .addOnFailureListener { e ->
+                        android.util.Log.e("DEBUG_SEARCH", "Error fetching users", e)
+                        onResult(emptyList())
+                    }
+            }
+            .addOnFailureListener { e ->
+                android.util.Log.e("DEBUG_SEARCH", "Error fetching members", e)
+                onResult(emptyList())
+            }
+    }
 }

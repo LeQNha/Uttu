@@ -54,6 +54,14 @@ class ProjectDetailsActivity : BaseActivity() {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Refresh lại danh sách project khi quay về fragment
+        project?.projectId?.let { projectId ->
+            taskViewModel.loadTasks(projectId)
+        }
+    }
+
     private fun onClickLisenerSetUp() {
         binding.btnSeeAllTasks.setOnClickListener {
             val intent = Intent(this, SeeAllTasksActivity::class.java)
@@ -65,6 +73,7 @@ class ProjectDetailsActivity : BaseActivity() {
         binding.btnSeeAllMembers.setOnClickListener {
             val intent = Intent(this, SeeAllMembersActivity::class.java)
             intent.putExtra("teamId", project?.projectId) // truyền projectId
+            intent.putExtra("userRole", currentUserRole) // truyền role
             startActivity(intent)
         }
 
@@ -171,11 +180,26 @@ class ProjectDetailsActivity : BaseActivity() {
                 projectId = "P3"
             )
         )
-        taskAdapter = TaskAdapter(taskList){selectedTask ->
-            val intent = Intent(this, TaskDetailsActivity::class.java)
-            intent.putExtra("task", selectedTask)
-            startActivity(intent)
-        }
+//        taskAdapter = TaskAdapter(taskList){selectedTask ->
+//            val intent = Intent(this, TaskDetailsActivity::class.java)
+//            intent.putExtra("task", selectedTask)
+//            intent.putExtra("userRole", currentUserRole)
+//            intent.putExtra("projectId", project?.projectId) // ✅ truyền projectId
+//            startActivity(intent)
+//        }
+        taskAdapter = TaskAdapter(
+            taskList,
+            onItemClick = { selectedTask ->
+                val intent = Intent(this, TaskDetailsActivity::class.java)
+                intent.putExtra("task", selectedTask)
+                intent.putExtra("userRole", currentUserRole)
+                intent.putExtra("projectId", project?.projectId)
+                startActivity(intent)
+            },
+            onStatusUpdate = { taskId, newStatus ->
+                taskViewModel.updateTaskStatus(taskId, newStatus)
+            }
+        )
         binding.taskRecyclerView.adapter = taskAdapter
         binding.taskRecyclerView.layoutManager = LinearLayoutManager(this)
 
