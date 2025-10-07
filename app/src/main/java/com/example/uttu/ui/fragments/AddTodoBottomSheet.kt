@@ -38,10 +38,17 @@ class AddTodoBottomSheet(
         btnSave.setOnClickListener {
             val title = etTitle.text.toString()
             val desc = etDesc.text.toString()
-            if (title.isNotEmpty()) {
-                onTodoAdded(title, desc)
-                dismiss()
+
+            if (title.isEmpty()) {
+                etTitle.error = "Title is required"
+                return@setOnClickListener
             }
+//            if (title.isNotEmpty()) {
+//                onTodoAdded(title, desc)
+//                dismiss()
+//            }
+            onTodoAdded(title, desc)
+            dismiss()
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.uttu.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -33,6 +34,14 @@ class TaskViewModel(val taskRepository: TaskRepository): ViewModel() {
     private val _updateTaskFieldResult = MutableLiveData<Result<Unit>>()
     val updateTaskFieldResult: LiveData<Result<Unit>> get() = _updateTaskFieldResult
 
+    private val _deleteTaskResult = MutableLiveData<Result<Void?>>()
+    val deleteTaskResult: LiveData<Result<Void?>> = _deleteTaskResult
+
+    private val _checkAccessResult = MutableLiveData<Boolean>()
+    val checkAccessResult: LiveData<Boolean> = _checkAccessResult
+
+    private val _filteredTasks = MutableLiveData<List<Task>>()
+    val filteredTasks: LiveData<List<Task>> = _filteredTasks
 
     fun addTask(task: Task) {
         taskRepository.addTask(task) { success, docId ->
@@ -78,6 +87,45 @@ class TaskViewModel(val taskRepository: TaskRepository): ViewModel() {
             } catch (e: Exception) {
                 _updateTaskFieldResult.postValue(Result.failure(e))
             }
+        }
+    }
+
+    fun deleteTask(taskId: String) {
+        taskRepository.deleteTask(taskId) { result ->
+            _deleteTaskResult.postValue(result)
+        }
+    }
+
+    fun checkUserAccessToTask(taskId: String, userRole: String, onResult: (Boolean) -> Unit) {
+        taskRepository.checkUserAccessToTask(taskId, userRole) { hasAccess ->
+            onResult(hasAccess) // trả thẳng kết quả về Activity
+            _checkAccessResult.postValue(hasAccess)
+        }
+    }
+
+    fun loadTasksByFilter(projectId: String, sortType: String, tabType: String) {
+        Log.d("TaskVM", "loadTasksByFilter(projectId=$projectId, sort=$sortType, tab=$tabType)")
+        if (sortType == "All") {
+            taskRepository.getTasksByProjectId(projectId) { allTasks ->
+                Log.d("TaskVM", "All tasks fetched: ${allTasks.size}")
+                val filtered = filterTasksByTab(allTasks, tabType)
+                _filteredTasks.postValue(filtered)
+            }
+        } else {
+            taskRepository.getTasksAssignedToUser(projectId) { userTasks ->
+                Log.d("TaskVM", "Yours tasks fetched: ${userTasks.size}")
+                val filtered = filterTasksByTab(userTasks, tabType)
+                Log.d("TaskVM", "Filtered (after tab filter): ${filtered.size}")
+                _filteredTasks.postValue(filtered)
+            }
+        }
+    }
+
+    private fun filterTasksByTab(tasks: List<Task>, tabType: String): List<Task> {
+        return when (tabType) {
+            "Completed" -> tasks.filter { it.taskStatus.equals("Completed", ignoreCase = true) }
+            "Incomplete" -> tasks.filter { !it.taskStatus.equals("Completed", ignoreCase = true) }
+            else -> tasks
         }
     }
 

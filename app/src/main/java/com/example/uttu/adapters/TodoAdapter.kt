@@ -8,7 +8,10 @@ import com.example.uttu.databinding.ActivityProjectDetailsBinding
 import com.example.uttu.databinding.ItemTodoBinding
 import com.example.uttu.models.Todo
 
-class TodoAdapter(private val todos: List<Todo>): RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
+class TodoAdapter(
+    private var todos: List<Todo>,
+    private val onStatusChange: (Todo, Boolean) -> Unit
+): RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -36,7 +39,10 @@ class TodoAdapter(private val todos: List<Todo>): RecyclerView.Adapter<TodoAdapt
             }
             // Khi check thì đổi trạng thái
             cbTodoStatus.setOnCheckedChangeListener { _, isChecked ->
-                todo.todoStatus = isChecked
+                if (isChecked != todo.todoStatus) {
+                    todo.todoStatus = isChecked
+                    onStatusChange(todo, isChecked)
+                }
             }
         }
     }
@@ -46,4 +52,13 @@ class TodoAdapter(private val todos: List<Todo>): RecyclerView.Adapter<TodoAdapt
     }
 
     inner class TodoViewHolder(val binding: ItemTodoBinding) : RecyclerView.ViewHolder(binding.root)
+
+    fun updateData(newTodos: List<Todo>) {
+        todos = newTodos
+        notifyDataSetChanged()
+    }
+
+    fun getItemAt(position: Int): Todo {
+        return todos[position]
+    }
 }

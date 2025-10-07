@@ -28,6 +28,9 @@ class SeeAllTasksActivity : BaseActivity() {
     private lateinit var taskAdapter: TaskAdapter
     private val taskList = mutableListOf<Task>()
 
+    private var currentSort = "All"
+    private var currentTab = "All"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        enableEdgeToEdge()
@@ -64,6 +67,8 @@ class SeeAllTasksActivity : BaseActivity() {
         super.onResume()
         // Refresh lại danh sách project khi quay về fragment
         taskViewModel.loadTasks(projectId)
+        taskViewModel.loadTasksByFilter(projectId, currentSort, currentTab)
+
     }
 
     private fun onClickListenerSetUp(){
@@ -95,8 +100,8 @@ class SeeAllTasksActivity : BaseActivity() {
         // Xử lý sự kiện chọn
         binding.sortDropdown.setOnItemClickListener { parent, _, position, _ ->
             val selected = parent.getItemAtPosition(position).toString()
-            // Ví dụ: log hoặc xử lý sort theo lựa chọn
-            println("Selected sort: $selected")
+            currentSort = selected
+            taskViewModel.loadTasksByFilter(projectId, currentSort, currentTab)
         }
     }
 
@@ -149,11 +154,24 @@ class SeeAllTasksActivity : BaseActivity() {
         taskAdapter = TaskAdapter(
             taskList,
             onItemClick = { selectedTask ->
-                val intent = Intent(this, TaskDetailsActivity::class.java)
-                intent.putExtra("task", selectedTask)
-                intent.putExtra("userRole", currentUserRole)
-                intent.putExtra("projectId", projectId)
-                startActivity(intent)
+                taskViewModel.checkUserAccessToTask(selectedTask.taskId, currentUserRole){ hasAccess ->
+                    if (hasAccess) {
+                        val intent = Intent(this, TaskDetailsActivity::class.java)
+                        intent.putExtra("task", selectedTask)
+                        intent.putExtra("userRole", currentUserRole)
+                        intent.putExtra("projectId", projectId)
+                        startActivity(intent)
+                    } else {
+                        Toast.makeText(this, "This is not your task", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+//                        val intent = Intent(this, TaskDetailsActivity::class.java)
+//                        intent.putExtra("task", selectedTask)
+//                        intent.putExtra("userRole", currentUserRole)
+//                        intent.putExtra("projectId", projectId)
+//                        startActivity(intent)
+
             },
             onStatusUpdate = { taskId, newStatus ->
                 taskViewModel.updateTaskStatus(taskId, newStatus)
@@ -179,11 +197,14 @@ class SeeAllTasksActivity : BaseActivity() {
                 tab.setBackgroundResource(R.drawable.bg_tab_selected)
                 tab.setTextColor(Color.BLUE)
 
-                when (tab.id) {
-                    R.id.tabAll -> { /* show all todos */ }
-                    R.id.tabCompleted -> { /* filter completed */ }
-                    R.id.tabIncomplete -> { /* filter incomplete */ }
+                currentTab = when (tab.id) {
+                    R.id.tabAll -> "All"
+                    R.id.tabCompleted -> "Completed"
+                    R.id.tabIncomplete -> "Incomplete"
+                    else -> "All"
                 }
+
+                taskViewModel.loadTasksByFilter(projectId, currentSort, currentTab)
             }
         }
     }
@@ -215,6 +236,17 @@ class SeeAllTasksActivity : BaseActivity() {
             }.onFailure { e ->
                 Toast.makeText(this, "Failed to update task: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        taskViewModel.filteredTasks.observe(this) { list ->
+            Log.d("SeeAllTasks", "FilteredTasks loaded: ${list.size}")
+            list.forEach { task ->
+                Log.d("SeeAllTasks", "→ ${task.taskId} | ${task.taskTitle} | ${task.taskStatus}")
+            }
+
+            taskList.clear()
+            taskList.addAll(list)
+            taskAdapter.notifyDataSetChanged()
         }
     }
 

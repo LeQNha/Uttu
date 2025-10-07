@@ -2,6 +2,7 @@ package com.example.uttu.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -11,7 +12,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.uttu.BaseActivity
 import com.example.uttu.R
 import com.example.uttu.adapters.TodoAdapter
@@ -22,6 +25,7 @@ import com.example.uttu.models.Todo
 import com.example.uttu.ui.fragments.AddTodoBottomSheet
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Date
+import java.util.UUID
 
 class TaskDetailsActivity : BaseActivity() {
 
@@ -29,6 +33,8 @@ class TaskDetailsActivity : BaseActivity() {
     private var task : Task? = null
     private var projectId: String? = null
     private var currentUserRole: String = "Member" // hoặc "Leader"
+
+    private lateinit var todoAdapter: TodoAdapter
 
     val sampleTodos = mutableListOf(
         Todo("1", "task1", "Research pattern flow", "Nghiên cứu pattern...", false, Date()),
@@ -46,23 +52,32 @@ class TaskDetailsActivity : BaseActivity() {
         task = intent.getParcelableExtra<Task>("task")
         projectId = intent.getStringExtra("projectId")
         currentUserRole = intent.getStringExtra("userRole") ?: "Member"
-        println("--- receive in TaskDetailsActivity ${projectId}")
 
+        todoRvSetUp()
+        onClickListenerSetUp()
+        viewmodelObserve()
+        uiDisplaySetUp()
+        enableSwipeToDelete()
+    }
+
+    private fun uiDisplaySetUp(){
         task?.let {
             binding.tvTaskTitle.text = it.taskTitle
             binding.tvTaskDescription.text = it.taskDescription
             binding.tvStatusTag.text = it.taskStatus
 
-            // ✅ hiển thị deadline
+            // hiển thị deadline
             it.taskDue?.let { date ->
                 val dateStr = android.text.format.DateFormat.format("dd MMM yyyy", date)
                 binding.tvTaskDate.text = dateStr
             }
         }
 
-        todoRvSetUp()
-        onClickListenerSetUp()
-        viewmodelObserve()
+        if (currentUserRole == "Leader") {
+            binding.btnDeleteTask.visibility = View.VISIBLE
+        } else {
+            binding.btnDeleteTask.visibility = View.GONE
+        }
     }
 
     private fun onClickListenerSetUp(){
@@ -186,12 +201,39 @@ class TaskDetailsActivity : BaseActivity() {
 
         binding.btnAddTodo.setOnClickListener {
             val addTodoSheet = AddTodoBottomSheet { title, desc ->
-                val newTodo = Todo("1", "1", title, desc, false, Date())
-                sampleTodos.add(newTodo)
-                binding.todoRecyclerView.adapter?.notifyItemInserted(sampleTodos.size -1)
+//                val newTodo = Todo("1", "1", title, desc, false, Date())
+                val newTodo = Todo(
+                    todoId = "",
+                    taskId = task?.taskId ?: "",
+                    todoTitle = title,
+                    todoDescription = desc,
+                    todoStatus = false,
+                    createdAt = Date()
+                )
+//                sampleTodos.add(newTodo)
+//                binding.todoRecyclerView.adapter?.notifyItemInserted(sampleTodos.size -1)
+                task?.let { currentTask ->
+                    todoViewModel.addTodo(currentTask.taskId, newTodo)
+                }
             }
 
             addTodoSheet.show(supportFragmentManager, "AddTodoBottomSheet")
+        }
+
+        binding.btnDeleteTask.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Delete Task")
+                .setMessage("Are you sure you want to delete this task?")
+                .setPositiveButton("Yes") { dialog, _ ->
+                    task?.let { currentTask ->
+                        taskViewModel.deleteTask(currentTask.taskId)
+                    }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
         }
     }
 
@@ -203,15 +245,66 @@ class TaskDetailsActivity : BaseActivity() {
                 Toast.makeText(this, "Update failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+
+        taskViewModel.deleteTaskResult.observe(this) { result ->
+            result.onSuccess {
+                Toast.makeText(this, "Task deleted successfully", Toast.LENGTH_SHORT).show()
+                finish() // ✅ Thoát khỏi trang sau khi xóa
+            }.onFailure { e ->
+                Toast.makeText(this, "Delete failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        todoViewModel.addTodoResult.observe(this) { result ->
+            result.onSuccess {
+                Toast.makeText(this, "Todo added successfully", Toast.LENGTH_SHORT).show()
+                // Cập nhật RecyclerView (load lại list hoặc append)
+            }.onFailure { e ->
+                Toast.makeText(this, "Add todo failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // ✅ Quan sát todos realtime
+        todoViewModel.todos.observe(this) { result ->
+            result.onSuccess { todoList ->
+                todoAdapter.updateData(todoList)
+            }.onFailure { e ->
+                Toast.makeText(this, "Load todos failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        todoViewModel.updateTodoStatusResult.observe(this) { result ->
+            result.onSuccess {
+                Toast.makeText(this, "Todo status updated", Toast.LENGTH_SHORT).show()
+            }.onFailure { e ->
+                Toast.makeText(this, "Update failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        todoViewModel.deleteTodoResult.observe(this) { result ->
+            result.onSuccess {
+                Toast.makeText(this, "Todo deleted", Toast.LENGTH_SHORT).show()
+            }.onFailure { e ->
+                Toast.makeText(this, "Delete failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun todoRvSetUp(){
 
-        val adapter = TodoAdapter(sampleTodos)
+        task?.let { currentTask ->
+            todoViewModel.getTodos(currentTask.taskId)
+        }
+
+        todoAdapter = TodoAdapter(emptyList()){ todo, newStatus ->
+            task?.let { currentTask ->
+                todoViewModel.updateTodoStatus(currentTask.taskId, todo.todoId, newStatus)
+            }
+        }
         // ⚠️ Quan trọng: phải có LayoutManager
         binding.todoRecyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        binding.todoRecyclerView.adapter = adapter
+        binding.todoRecyclerView.adapter = todoAdapter
     }
 
     private fun showEditDialog(isTitle: Boolean){
@@ -314,6 +407,29 @@ class TaskDetailsActivity : BaseActivity() {
         )
 
         datePicker.show()
+    }
+
+    private fun enableSwipeToDelete() {
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val todo = todoAdapter.getItemAt(position)
+
+                task?.let { currentTask ->
+                    todoViewModel.deleteTodo(currentTask.taskId, todo.todoId)
+                }
+            }
+        }
+        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        itemTouchHelper.attachToRecyclerView(binding.todoRecyclerView)
     }
 
 }

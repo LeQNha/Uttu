@@ -164,9 +164,85 @@ class TaskRepository {
             }
     }
 
+    fun deleteTask(taskId: String, onResult: (Result<Void?>) -> Unit) {
+        tasksCollection.document(taskId)
+            .delete()
+            .addOnSuccessListener {
+                onResult(Result.success(null))
+            }
+            .addOnFailureListener { e ->
+                onResult(Result.failure(e))
+            }
+    }
+
     suspend fun updateTaskField(taskId: String, field: String, value: Any) {
         val taskRef = tasksCollection.document(taskId)
         taskRef.update(field, value).await()
+    }
+
+    fun checkUserAccessToTask(taskId: String, userRole: String, onResult: (Boolean) -> Unit){
+        if(userRole == "Leader"){
+            onResult(true)
+            return
+        }
+
+        val currentUserId = auth.currentUser?.uid ?: ""
+
+        // Nếu là Member → kiểm tra trong assignedMembers
+        assignedMembersCollection
+            .whereEqualTo("taskId", taskId)
+            .whereEqualTo("memberId", currentUserId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if(!snapshot.isEmpty){
+                    onResult(true)
+                }else{
+                    onResult(false)
+                }
+            }
+            .addOnFailureListener {
+                onResult(false)
+            }
+    }
+
+    fun getTasksAssignedToUser(projectId: String, onResult: (List<Task>) -> Unit){
+        val userId = auth.currentUser?.uid ?: ""
+        Log.d("TaskRepo", "getTasksAssignedToUser() called, projectId=$projectId, userId=$userId")
+        assignedMembersCollection
+            .whereEqualTo("memberId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                Log.d("TaskRepo", "AssignedMembers found: ${snapshot.size()}")
+                val taskIds = snapshot.documents.mapNotNull { it.getString("taskId") }
+                Log.d("TaskRepo", "TaskIds from assignedMembers: $taskIds")
+                if(taskIds.isEmpty()){
+                    Log.w("TaskRepo", "⚠️ No tasks assigned to user $userId")
+                    onResult(emptyList())
+                    return@addOnSuccessListener
+                }
+
+                tasksCollection
+                    .whereIn("taskId", taskIds)
+                    .whereEqualTo("projectId", projectId)
+                    .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                    .get()
+                    .addOnSuccessListener { taskSnap ->
+                        Log.d("TaskRepo", "Tasks query success: ${taskSnap.size()} documents")
+                        taskSnap.documents.forEach { doc ->
+                            Log.d("TaskRepo", "→ Task docId=${doc.id}, data=${doc.data}")
+                        }
+                        val tasks = taskSnap.documents.mapNotNull { it.toObject(Task::class.java) }
+                        onResult(tasks)
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("TaskRepo", "❌ Failed to fetch tasks: ${e.message}", e)
+                        onResult(emptyList())
+                    }
+            }
+            .addOnFailureListener {
+                Log.e("TaskRepo", "❌ Failed to fetch assignedMembers: ${it.message}", it)
+                onResult(emptyList())
+            }
     }
 
 }
