@@ -7,12 +7,16 @@ import android.view.LayoutInflater
 import android.view.View
 import androidx.appcompat.widget.PopupMenu
 import com.example.uttu.R
+import com.example.uttu.models.TeamMember
 import com.example.uttu.models.User
 
 class FriendAdapter(
     private var friends: List<User>,
     private val onOptionSelected: (User, Int) -> Unit
 ): RecyclerView.Adapter<FriendAdapter.FriendViewHolder>() {
+
+    private var originalList: List<User> = friends
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -40,6 +44,7 @@ class FriendAdapter(
     }
 
     fun updateData(newFriends: List<User>) {
+        originalList = newFriends
         friends = newFriends
         notifyDataSetChanged()
     }
@@ -70,5 +75,14 @@ class FriendAdapter(
         }
 
         popup.show()
+    }
+
+    fun filter(query: String) {
+        friends = if (query.isEmpty()) {
+            originalList
+        } else {
+            originalList.filter { it.username.contains(query, ignoreCase = true) }
+        }
+        notifyDataSetChanged()
     }
 }

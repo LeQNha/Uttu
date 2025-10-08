@@ -45,6 +45,12 @@ class ProjectViewModel(val projectRepository: ProjectRepository): ViewModel() {
     private val _searchMembersResults = MutableLiveData<List<User>>()
     val searchMembersResults: LiveData<List<User>> = _searchMembersResults
 
+    private val _memberCountMap = MutableLiveData<Map<String, Int>>() // map projectId → count
+    val memberCountMap: LiveData<Map<String, Int>> get() = _memberCountMap
+
+    private val _userRolesMap = MutableLiveData<Map<String, String>>() // projectId → "Leader"/"Member"
+    val userRolesMap: LiveData<Map<String, String>> get() = _userRolesMap
+
 
     fun createProject(projectName: String){
         viewModelScope.launch {
@@ -116,6 +122,28 @@ class ProjectViewModel(val projectRepository: ProjectRepository): ViewModel() {
     fun searchMembersInProject(projectId: String, keyword: String) {
         projectRepository.searchMembersInProject(projectId, keyword) { list ->
             _searchMembersResults.postValue(list)
+        }
+    }
+
+    fun getMemberCountByProjectId(projectIds: List<String>) {
+        viewModelScope.launch {
+            val map = mutableMapOf<String, Int>()
+            for (id in projectIds) {
+                val count = projectRepository.getMemberCountByProjectId(id)
+                map[id] = count
+            }
+            _memberCountMap.postValue(map)
+        }
+    }
+
+    fun getUserRolesForProjects(projectIds: List<String>) {
+        viewModelScope.launch {
+            val map = mutableMapOf<String, String>()
+            for (id in projectIds) {
+                val role = projectRepository.getUserRoleInProject(id)
+                map[id] = role
+            }
+            _userRolesMap.postValue(map)
         }
     }
 

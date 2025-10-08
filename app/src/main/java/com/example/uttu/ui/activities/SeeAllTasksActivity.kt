@@ -85,6 +85,10 @@ class SeeAllTasksActivity : BaseActivity() {
             }
             bottomSheet.show(supportFragmentManager, "AddTaskBottomSheet")
         }
+        // Nút quay lại
+        binding.btnBack.setOnClickListener {
+            finish() // Kết thúc activity hiện tại và quay lại activity trước đó
+        }
     }
 
     private fun dropdownSetUp(){

@@ -16,6 +16,9 @@ class AssignedMemberAdapter(
     private var currentUserRole: String, // thêm role của current user
     private val onOptionSelected: (User, Int) -> Unit
 ): RecyclerView.Adapter<AssignedMemberAdapter.AssignMemberViewHolder>() {
+
+    private var originalList: List<User> = assignedMembers
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -68,6 +71,21 @@ class AssignedMemberAdapter(
 
     fun updateCurrentUserRole(role: String) {
         currentUserRole = role
+        notifyDataSetChanged()
+    }
+
+    fun updateData(newAssignedMembers: List<User>) {
+        originalList = newAssignedMembers
+        assignedMembers = newAssignedMembers
+        notifyDataSetChanged()
+    }
+
+    fun filter(query: String) {
+        assignedMembers = if (query.isEmpty()) {
+            originalList
+        } else {
+            originalList.filter { it.username.contains(query, ignoreCase = true) }
+        }
         notifyDataSetChanged()
     }
 }

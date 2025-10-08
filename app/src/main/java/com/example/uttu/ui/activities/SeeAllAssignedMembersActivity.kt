@@ -26,6 +26,8 @@ class SeeAllAssignedMembersActivity : BaseActivity() {
     private var taskId: String? = null
     private var projectId: String? = null
     private var currentUserRole: String = "Member" // hoặc "Leader"
+
+    private lateinit var assignedMemberAdapter: AssignedMemberAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        setContentView(R.layout.activity_see_all_assigned_members)
@@ -49,11 +51,15 @@ class SeeAllAssignedMembersActivity : BaseActivity() {
 
         onClickListenerSetUp()
         assignMemberRvSetUp()
+        searchBoxSetUp()
     }
 
     private fun onClickListenerSetUp(){
         binding.fabAssignNewMember.setOnClickListener {
             showSearchAssignMemberDialog()
+        }
+        binding.btnBack.setOnClickListener {
+            finish() // Kết thúc activity hiện tại và quay lại activity trước đó
         }
     }
 
@@ -126,7 +132,7 @@ class SeeAllAssignedMembersActivity : BaseActivity() {
 //        }
 
         taskViewModel.assignedMembers.observe(this) { users ->
-            val adapter =
+            assignedMemberAdapter =
                 AssignedMemberAdapter(users, currentUserRole) { assignedMember, actionId ->
                     when (actionId) {
                         R.id.action_unassign_member -> {
@@ -151,7 +157,7 @@ class SeeAllAssignedMembersActivity : BaseActivity() {
                 }
 
             binding.recyclerAssignedMembers.layoutManager = LinearLayoutManager(this)
-            binding.recyclerAssignedMembers.adapter = adapter
+            binding.recyclerAssignedMembers.adapter = assignedMemberAdapter
 
         }
 //        binding.recyclerAssignedMembers.layoutManager = LinearLayoutManager(this)
@@ -221,6 +227,13 @@ class SeeAllAssignedMembersActivity : BaseActivity() {
             } else {
                 Toast.makeText(this, msg ?: "Assign failed", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun searchBoxSetUp(){
+        binding.searchBox.addTextChangedListener { text ->
+            val query = text?.toString()?.trim().orEmpty()
+            assignedMemberAdapter.filter(query)
         }
     }
 }

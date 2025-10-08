@@ -98,6 +98,10 @@ class ProjectDetailsActivity : BaseActivity() {
                 showEditProjectNameDialog(project!!)
             }
         }
+
+        binding.btnBack.setOnClickListener {
+            finish() // Kết thúc activity hiện tại và quay lại activity trước đó
+        }
     }
 
     private fun resultObserve(){

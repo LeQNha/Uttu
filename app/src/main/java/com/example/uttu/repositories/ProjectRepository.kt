@@ -10,6 +10,7 @@ import com.example.uttu.models.User
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.tasks.await
 import java.util.Date
 
@@ -281,6 +282,37 @@ class ProjectRepository {
                 android.util.Log.e("DEBUG_SEARCH", "Error fetching members", e)
                 onResult(emptyList())
             }
+    }
+
+    suspend fun getMemberCountByProjectId(projectId: String): Int{
+        return try{
+            val snapshot = firestore.collection("members")
+                .whereEqualTo("teamId", projectId)
+                .get()
+                .await()
+            snapshot.size()
+        }catch (e: Exception){
+            e.printStackTrace()
+            0
+        }
+    }
+
+    suspend fun getUserRoleInProject(projectId: String): String {
+        return try {
+            val currentUser = auth.currentUser ?: return "Member"
+            val userId = currentUser.uid
+
+            val leaderSnapshot = firestore.collection("leaders")
+                .whereEqualTo("teamId", projectId)
+                .whereEqualTo("leaderId", userId)
+                .get()
+                .await()
+
+            if (!leaderSnapshot.isEmpty) "Leader" else "Member"
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "Member"
+        }
     }
 
 }

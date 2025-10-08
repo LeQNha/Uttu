@@ -25,6 +25,8 @@ class SeeAllMembersActivity : BaseActivity() {
     private var teamId: String? = null
     private var currentUserRole: String = "Member" // hoặc "Leader"
 
+    private lateinit var adapter: MemberAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        enableEdgeToEdge()
@@ -44,11 +46,15 @@ class SeeAllMembersActivity : BaseActivity() {
 
         onClickListenerSetUp()
         memberRvSetUp()
+        searchBoxSetUp()
     }
 
     private fun onClickListenerSetUp(){
         binding.fabAddNewMember.setOnClickListener {
             showSearchFriendDialog()
+        }
+        binding.btnBack.setOnClickListener {
+            finish() // Kết thúc activity hiện tại và quay lại activity trước đó
         }
     }
 
@@ -98,7 +104,7 @@ class SeeAllMembersActivity : BaseActivity() {
             )
         )
 
-        val adapter = MemberAdapter(emptyList(), "Member"){ member, actionId ->
+        adapter = MemberAdapter(emptyList(), "Member"){ member, actionId ->
             when(actionId) {
                 R.id.action_view_member_profile -> {
                     Toast.makeText(this, "View ${member.user.username}", Toast.LENGTH_SHORT).show()
@@ -215,6 +221,13 @@ class SeeAllMembersActivity : BaseActivity() {
             }.onFailure { e ->
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun searchBoxSetUp(){
+        binding.searchBox.addTextChangedListener { text ->
+            val query = text?.toString()?.trim().orEmpty()
+            adapter.filter(query)
         }
     }
 }

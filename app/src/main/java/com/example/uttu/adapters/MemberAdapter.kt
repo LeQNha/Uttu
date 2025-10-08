@@ -15,6 +15,9 @@ class MemberAdapter(
     private var currentUserRole: String, // thêm role của current user
     private val onOptionSelected: (TeamMember, Int) -> Unit
 ): RecyclerView.Adapter<MemberAdapter.MemberViewHolder>() {
+
+    private var originalList: List<TeamMember> = members
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -74,11 +77,21 @@ class MemberAdapter(
 
     // Hàm updateData để thay danh sách member mới
     fun updateData(newMembers: List<TeamMember>) {
+        originalList = newMembers
         members = newMembers
         notifyDataSetChanged()
     }
     fun updateCurrentUserRole(role: String) {
         currentUserRole = role
+        notifyDataSetChanged()
+    }
+
+    fun filter(query: String) {
+        members = if (query.isEmpty()) {
+            originalList
+        } else {
+            originalList.filter { it.user.username.contains(query, ignoreCase = true) }
+        }
         notifyDataSetChanged()
     }
 }

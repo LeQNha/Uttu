@@ -25,7 +25,6 @@
             android:layout_height="24dp"
             android:layout_margin="16dp"
             android:contentDescription="Back"
-            android:padding="4dp"
             android:src="@drawable/ic_arrow_back"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -54,7 +53,7 @@
             app:layout_constraintBottom_toBottomOf="@id/btnBack"
             app:layout_constraintEnd_toStartOf="@id/btnDeleteTask"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@id/btnBack"
+            app:layout_constraintStart_toStartOf="@+id/btnBack"
             app:layout_constraintTop_toTopOf="@id/btnBack" />
 
         <!-- Task Title -->

@@ -235,6 +235,10 @@ class TaskDetailsActivity : BaseActivity() {
                 }
                 .show()
         }
+
+        binding.btnBack.setOnClickListener {
+            finish() // Kết thúc activity hiện tại và quay lại activity trước đó
+        }
     }
 
     private fun viewmodelObserve(){

@@ -24,6 +24,7 @@ import com.example.uttu.viewmodels.ProjectViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputEditText
 import java.util.Date
+import androidx.core.widget.addTextChangedListener
 
 class HomeFragment : Fragment() {
 
@@ -68,6 +69,7 @@ class HomeFragment : Fragment() {
         dropdownSetUp()
         projectRvSetUp()
         onClickListenerSetUp()
+        setupSearchBox()
     }
 
     override fun onResume() {
@@ -188,6 +190,8 @@ class HomeFragment : Fragment() {
                 val sortedList = currentProjects.sortedByDescending { it.createdAt }
                 adapter.updateData(sortedList)
 //                adapter.updateData(currentProjects)
+                projectViewModel.getMemberCountByProjectId(projects.map { it.projectId })
+                projectViewModel.getUserRolesForProjects(projects.map { it.projectId })
             }.onFailure {
                 Toast.makeText(requireContext(), "Error: ${it.message}", Toast.LENGTH_SHORT).show()
             }
@@ -195,11 +199,30 @@ class HomeFragment : Fragment() {
 
         // Load project cho user hiện tại
         projectViewModel.getUserProjects()
+
+        projectViewModel.memberCountMap.observe(viewLifecycleOwner) { countMap ->
+            adapter.updateMemberCounts(countMap)
+        }
+        projectViewModel.userRolesMap.observe(viewLifecycleOwner) { roleMap ->
+            adapter.updateUserRoles(roleMap)
+        }
     }
 
-    fun updateData(newList: List<Project>) {
-//        projectList.clear()
-//        projectList.addAll(newList)
-//        notifyDataSetChanged()
+    private fun setupSearchBox() {
+        binding.searchBox.addTextChangedListener { editable ->
+            val query = editable.toString().trim().lowercase()
+
+            if (query.isEmpty()) {
+                // Hiển thị lại toàn bộ project khi xóa nội dung tìm kiếm
+                adapter.updateData(currentProjects)
+            } else {
+                // Lọc danh sách theo tên
+                val filteredList = currentProjects.filter {
+                    it.projectName.lowercase().contains(query)
+                }
+                adapter.updateData(filteredList)
+            }
+        }
     }
+
 }

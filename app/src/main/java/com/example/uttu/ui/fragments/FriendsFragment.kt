@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.uttu.MainActivity
 import com.example.uttu.R
@@ -44,6 +45,7 @@ class FriendsFragment : Fragment() {
         userViewModel = (requireActivity() as MainActivity).userViewModel
 
         friendsRvSetUp()
+        searchBoxSetUp()
     }
 
     override fun onDestroyView() {
@@ -131,6 +133,13 @@ class FriendsFragment : Fragment() {
             }.onFailure { e ->
                 Toast.makeText(requireContext(), e.message, Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun searchBoxSetUp(){
+        binding.searchBox.addTextChangedListener { text ->
+            val query = text?.toString()?.trim().orEmpty()
+            adapter.filter(query)
         }
     }
 }
